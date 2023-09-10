@@ -1,8 +1,8 @@
-package user
+package person
 
 import "people-food-service/iternal/food"
 
-type User struct {
+type Person struct {
 	UUID       string      `json:"uuid"`
 	Name       string      `json:"name"`
 	FamilyName string      `json:"family_name"`
