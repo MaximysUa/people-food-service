@@ -7,5 +7,5 @@ type Repository interface {
 	FindAll(ctx context.Context) ([]Person, error)
 	FindOne(ctx context.Context, name, familyName string) (Person, error)
 	Update(ctx context.Context, person Person) error
-	Delete(ctx context.Context, name, familyName string) error
+	Delete(ctx context.Context, id string) error
 }

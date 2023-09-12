@@ -24,6 +24,8 @@ CREATE TABLE public.person_food(
 
 );
 
+UPDATE person p SET p.name = $2, p.family_name = $3 WHERE p.id = $1;
+DELETE FROM person p WHERE p.name = 'Игорь' AND p.family_name = 'Адамов';
 
 INSERT INTO food(name, price) VALUES('Пицца', 7.85);
 INSERT INTO food(name, price) VALUES('Бурито', 9.55);
@@ -31,7 +33,7 @@ INSERT INTO food(name, price) VALUES('Шавуха', 15.22);
 
 INSERT INTO public.person(name, family_name) VALUES('Василий', 'Уткин');
 INSERT INTO public.person(name, family_name) VALUES('Василий', 'Соловьёв');
-INSERT INTO public.person(name, family_name) VALUES('Пётр', 'Золотайко');
+INSERT INTO public.person(name, family_name) VALUES('Игорь', 'Адамов');
 --0275a687-a26c-49da-a9ae-8070b3a08abe
 --0275a687-a26c-49da-a9ae-8070b3a08abe
 --0275a687-a26c-49da-a9ae-8070b3a08abe
