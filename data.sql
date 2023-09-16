@@ -24,7 +24,7 @@ CREATE TABLE public.person_food(
 
 );
 
-UPDATE person p SET p.name = $2, p.family_name = $3 WHERE p.id = $1;
+
 DELETE FROM person p WHERE p.name = 'Игорь' AND p.family_name = 'Адамов';
 
 INSERT INTO food(name, price) VALUES('Пицца', 7.85);
