@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"people-food-service/iternal/config"
+	mwlogger "people-food-service/iternal/middleware/logger"
 	person "people-food-service/iternal/person/db"
 	ph "people-food-service/iternal/person/handlers"
 	"people-food-service/pkg/client/logger"
@@ -23,7 +24,7 @@ func main() {
 	router := chi.NewRouter()
 	router.Use(middleware.RequestID)
 	router.Use(middleware.Logger)
-	//router.Use(mwLogger.New(log))
+	router.Use(mwlogger.New(logger))
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.URLFormat)
 
@@ -32,8 +33,8 @@ func main() {
 	if err != nil {
 		return
 	}
-	repository := person.NewRepository(client)
-	router.Get("api/person", ph.GetOne(logger, repository, context.TODO()))
+	repository := person.NewRepository(client, logger)
+	router.Get("/api/person", ph.GetOne(logger, repository, context.TODO()))
 
 	listener, listenErr := net.Listen("tcp", cfg.Listen.Port)
 	logger.Infof("server is listening port %s", cfg.Listen.Port)

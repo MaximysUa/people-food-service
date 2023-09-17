@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-chi/render"
+	"github.com/go-playground/validator/v10"
 	"io"
 	"net/http"
 	"people-food-service/iternal/food"
@@ -19,8 +20,8 @@ type Response struct {
 
 type Request struct {
 	UUID       string      `json:"uuid,omitempty"`
-	Name       string      `json:"name"`
-	FamilyName string      `json:"family_name"`
+	Name       string      `json:"name" validate:"alphaunicode"`
+	FamilyName string      `json:"family_name" validate:"alphaunicode"`
 	Food       []food.Food `json:"food,omitempty"`
 }
 
@@ -40,6 +41,16 @@ func GetOne(logger *logging.Logger, repos person.Repository, ctx context.Context
 			return
 		}
 		logger.Tracef("request body decoded. Request: %v", req)
+
+		if err := validator.New().Struct(req); err != nil {
+			validateErr := err.(validator.ValidationErrors)
+
+			logger.Errorf("invalid request. Error: %v", err)
+
+			render.JSON(w, r, validateErr)
+
+			return
+		}
 		one, err := repos.FindOne(ctx, req.Name, req.FamilyName)
 		if err != nil {
 			return

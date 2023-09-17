@@ -3,15 +3,16 @@ package person
 import (
 	"context"
 	"fmt"
-	"log"
 	"people-food-service/iternal/food"
 	"people-food-service/iternal/person"
+	logging "people-food-service/pkg/client/logger"
 	"people-food-service/pkg/client/postgresql"
 	"strings"
 )
 
 type repository struct {
 	client postgresql.Client
+	logger *logging.Logger
 }
 
 func formatQuery(q string) string {
@@ -26,7 +27,7 @@ func (r *repository) Create(ctx context.Context, person person.Person) error {
 	newPers := r.client.QueryRow(ctx, q, person.Name, person.FamilyName)
 	err := newPers.Scan(&person.UUID)
 	if err != nil {
-		log.Printf("faild to scan new person. query:%s\n", formatQuery(q))
+		r.logger.Errorf("faild to scan new person. query:%s\n", formatQuery(q))
 		return err
 	}
 	sq := `
@@ -48,7 +49,7 @@ func (r *repository) FindAll(ctx context.Context) ([]person.Person, error) {
 
 	rows, err := r.client.Query(ctx, q)
 	if err != nil {
-		log.Printf("Faild with finding all people. query:%s\n", formatQuery(q))
+		r.logger.Errorf("Faild with finding all people. query:%s\n", formatQuery(q))
 		return nil, err
 	}
 	people := make([]person.Person, 0)
@@ -57,7 +58,7 @@ func (r *repository) FindAll(ctx context.Context) ([]person.Person, error) {
 
 		err := rows.Scan(&p.UUID, &p.Name, &p.FamilyName)
 		if err != nil {
-			log.Printf("Faild with scaning person row. err:%v\n", err)
+			r.logger.Errorf("Faild with scaning person row. err:%v\n", err)
 			return nil, err
 		}
 		sq := `
@@ -70,13 +71,13 @@ func (r *repository) FindAll(ctx context.Context) ([]person.Person, error) {
 		var f food.Food
 		foodRow, err := r.client.Query(ctx, sq, p.UUID)
 		if err != nil {
-			log.Printf("Faild with finding food row. query:%s\n", formatQuery(sq))
+			r.logger.Errorf("Faild with finding food row. query:%s\n", formatQuery(sq))
 			return nil, err
 		}
 		for foodRow.Next() {
 			err = foodRow.Scan(&f.UUID, &f.Name, &f.Price)
 			if err != nil {
-				log.Printf("Faild with scaning food row. err:%v\n", err)
+				r.logger.Errorf("Faild with scaning food row. err:%v\n", err)
 				return nil, err
 			}
 			personFood = append(personFood, f)
@@ -98,7 +99,7 @@ func (r *repository) FindOne(ctx context.Context, name, familyName string) (pers
 	row := r.client.QueryRow(ctx, q, name, familyName)
 	err := row.Scan(&p.UUID, &p.Name, &p.FamilyName)
 	if err != nil {
-		log.Printf("Faild with finding person. query:%s\n", formatQuery(q))
+		r.logger.Errorf("Faild with finding person. query:%s\n", formatQuery(q))
 		return person.Person{}, err
 	}
 	sq := `
@@ -110,7 +111,7 @@ func (r *repository) FindOne(ctx context.Context, name, familyName string) (pers
 	personFood := make([]food.Food, 0)
 	rows, err := r.client.Query(ctx, sq, p.UUID)
 	if err != nil {
-		log.Printf("Faild with finding food row. query:%s\n", formatQuery(sq))
+		r.logger.Errorf("Faild with finding food row. query:%s\n", formatQuery(sq))
 
 		return person.Person{}, err
 	}
@@ -118,7 +119,7 @@ func (r *repository) FindOne(ctx context.Context, name, familyName string) (pers
 		var f food.Food
 		err := rows.Scan(&f.UUID, &f.Name, &f.Price)
 		if err != nil {
-			log.Printf("Faild with scaning food row. err:%v\n", err)
+			r.logger.Errorf("Faild with scaning food row. err:%v\n", err)
 
 			return person.Person{}, err
 		}
@@ -138,18 +139,18 @@ func (r *repository) Update(ctx context.Context, person person.Person) error {
 	//sq := `UPDATE person_food SET name = $2, family_name = $3 WHERE id = $1;`
 	exec, err := r.client.Exec(ctx, q, person.UUID, person.Name, person.FamilyName)
 	if err != nil {
-		log.Printf("Failed with exec the query: %s with id: %s\n", formatQuery(q), person.UUID)
+		r.logger.Errorf("Failed with exec the query: %s with id: %s\n", formatQuery(q), person.UUID)
 		return err
 	}
 	if exec.RowsAffected() == 0 {
 		err = fmt.Errorf("cant find person in table person with id: %s\n", person.UUID)
-		log.Println(err)
+		r.logger.Errorf(err.Error())
 		return err
 	}
 	return nil
 }
 
-func (r *repository) Delete(ctx context.Context, id string) error {
+func (r *repository) Delete(ctx context.Context, p person.Person) error {
 	q := `
 		DELETE FROM person p 
 		WHERE p.id = $1 
@@ -158,32 +159,33 @@ func (r *repository) Delete(ctx context.Context, id string) error {
 		DELETE FROM person_food pf
 		WHERE pf.person_id = $1 
 		`
-	exec, err := r.client.Exec(ctx, q, id)
+	exec, err := r.client.Exec(ctx, q, p.UUID)
 	if err != nil {
-		log.Printf("Failed with exec the query: %s with id: %s\n", formatQuery(q), id)
+		r.logger.Errorf("Failed with exec the query: %s with id: %s\n", formatQuery(q), p.UUID)
 		return err
 	}
-	execSq, err := r.client.Exec(ctx, sq, id)
+	execSq, err := r.client.Exec(ctx, sq, p.UUID)
 	if err != nil {
-		log.Printf("Failed with exec the query: %s with id: %s\n", formatQuery(sq), id)
+		r.logger.Errorf("Failed with exec the query: %s with id: %s\n", formatQuery(sq), p.UUID)
 		return err
 	}
 	if exec.RowsAffected() == 0 {
-		err = fmt.Errorf("cant find person in table person with id: %s\n", id)
-		log.Println(err)
+		err = fmt.Errorf("cant find person in table person with id: %s\n", p.UUID)
+		r.logger.Errorf(err.Error())
 		return err
 	}
 	if execSq.RowsAffected() == 0 {
-		err = fmt.Errorf("cant find person in table person_food with id: %s\n", id)
-		log.Println(err)
+		err = fmt.Errorf("cant find person in table person_food with id: %s\n", p.UUID)
+		r.logger.Errorf(err.Error())
 		return err
 	}
 
 	return nil
 }
 
-func NewRepository(client postgresql.Client) person.Repository {
+func NewRepository(client postgresql.Client, logger *logging.Logger) person.Repository {
 	return &repository{
 		client: client,
+		logger: logger,
 	}
 }
