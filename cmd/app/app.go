@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
-	"github.com/julienschmidt/httprouter"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"net"
 	"net/http"
 	"people-food-service/iternal/config"
-	"people-food-service/iternal/person"
+	person "people-food-service/iternal/person/db"
+	ph "people-food-service/iternal/person/handlers"
 	"people-food-service/pkg/client/logger"
 	"people-food-service/pkg/client/postgresql"
 	"time"
@@ -18,16 +20,21 @@ func main() {
 	logging.Init(cfg.Env)
 	logger := logging.GetLogger()
 
-	router := httprouter.New()
-	handler := person.NewHandler(logger)
-	handler.Register(router)
+	router := chi.NewRouter()
+	router.Use(middleware.RequestID)
+	router.Use(middleware.Logger)
+	//router.Use(mwLogger.New(log))
+	router.Use(middleware.Recoverer)
+	router.Use(middleware.URLFormat)
 
 	client, err := postgresql.NewClient(context.TODO(), 5, cfg.Storage)
 	defer client.Close()
 	if err != nil {
 		return
 	}
-	//repository := person.NewRepository(client)
+	repository := person.NewRepository(client)
+	router.Get("api/person", ph.GetOne(logger, repository, context.TODO()))
+
 	listener, listenErr := net.Listen("tcp", cfg.Listen.Port)
 	logger.Infof("server is listening port %s", cfg.Listen.Port)
 

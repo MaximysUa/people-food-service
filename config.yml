@@ -1,13 +1,13 @@
 ---
-env: "local"
-is_debug: "true"
+env: local
+is_debug: true
 listen:
-  type: "port"
-  port: ":8080"
+  type: port
+  port: :8080
 
 storage:
-  host: "localhost"
-  port: "5432"
-  database: "postgres"
-  username: "postgres"
-  password: "142569"
+  host: localhost
+  port: 5432
+  database: postgres
+  username: postgres
+  password: 142569
