@@ -7,7 +7,8 @@ import (
 )
 
 type Config struct {
-	IsDebug *bool `yaml:"is_debug"`
+	Env     string `yaml:"env" env-default:"dev"`
+	IsDebug *bool  `yaml:"is_debug"`
 	Listen  struct {
 		Type string `yaml:"type"`
 

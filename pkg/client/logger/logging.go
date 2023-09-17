@@ -1,4 +1,4 @@
-package logger
+package logging
 
 import (
 	"fmt"
@@ -7,6 +7,12 @@ import (
 	"os"
 	"path"
 	"runtime"
+)
+
+const (
+	envLocal = "local"
+	envDev   = "dev"
+	envProd  = "prod"
 )
 
 // сущность для записи сразу в файл и оутпут
@@ -50,10 +56,10 @@ func (l *Logger) GetLoggerWithField(k string, v interface{}) *Logger {
 }
 
 // Создаём новую сущность логгирования и настраиваем её
-func Init() {
+func Init(env string) {
 	l := logrus.New()
 	l.SetReportCaller(true)
-	//формат возвращаемого значения - текст, так же может быть и jsong
+	//формат возвращаемого значения - текст, так же может быть и json
 	l.Formatter = &logrus.TextFormatter{
 		//получаем фрейм в котором происходит логирование, в нем есть информация о фаиле в котором происходит логирование
 		//в строчке -> там есть инфа о линии и функц в в которой что то происходит
@@ -62,8 +68,9 @@ func Init() {
 			return fmt.Sprintf("%s()", frame.Function), fmt.Sprintf("%s:%d", fileName, frame.Line)
 		},
 		//отключаем цвета (зачем?) TODO поиграться с цветами
-		DisableColors: true,
-		FullTimestamp: true,
+		ForceColors:               true,
+		FullTimestamp:             true,
+		EnvironmentOverrideColors: true,
 	}
 
 	// создаём папку для хранения логов
@@ -83,7 +90,15 @@ func Init() {
 		LogLevels: logrus.AllLevels,
 	})
 
-	l.SetLevel(logrus.TraceLevel)
+	switch env {
+	case envLocal:
+		l.SetLevel(logrus.TraceLevel)
+	case envDev:
+		l.SetLevel(logrus.DebugLevel)
+	case envProd:
+		l.SetLevel(logrus.InfoLevel)
+
+	}
 
 	e = logrus.NewEntry(l)
 }
