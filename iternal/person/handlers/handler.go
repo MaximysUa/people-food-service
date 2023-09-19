@@ -2,53 +2,24 @@ package ph
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/go-chi/render"
-	"github.com/go-playground/validator/v10"
-	"io"
 	"net/http"
-	"people-food-service/iternal/food"
+	"people-food-service/iternal/helper"
 	"people-food-service/iternal/person"
+	persondto "people-food-service/iternal/person/dto"
 	logging "people-food-service/pkg/client/logger"
 )
 
-type Response struct {
-	Person         []person.Person `yaml:"person"`
-	ResponseStatus string          `yaml:"response-status"`
-}
-
-type Request struct {
-	UUID       string      `json:"uuid,omitempty"`
-	Name       string      `json:"name" validate:"alphaunicode"`
-	FamilyName string      `json:"family_name" validate:"alphaunicode"`
-	Food       []food.Food `json:"food,omitempty"`
-}
-
 func GetOne(logger *logging.Logger, repos person.Repository, ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req Request
-		var res Response
-		err := render.DecodeJSON(r.Body, &req)
-		if errors.Is(err, io.EOF) {
-			logger.Error("request body is empty")
-			render.JSON(w, r, fmt.Errorf("request body is empty"))
-			return
-		}
+
+		var res persondto.ResponseDTO
+		req, err := helper.Validation(r)
 		if err != nil {
-			logger.Errorf("failed to decode request body. Error: %v", err)
-			render.JSON(w, r, fmt.Errorf("failed to decode request body. Error: %v", err))
-			return
-		}
-		logger.Tracef("request body decoded. Request: %v", req)
-
-		if err := validator.New().Struct(req); err != nil {
-			validateErr := err.(validator.ValidationErrors)
-
-			logger.Errorf("invalid request. Error: %v", err)
-
-			render.JSON(w, r, validateErr)
-
+			logger.Error(err)
+			w.WriteHeader(http.StatusBadRequest)
+			render.JSON(w, r, err)
 			return
 		}
 		one, err := repos.FindOne(ctx, req.Name, req.FamilyName)
@@ -60,3 +31,34 @@ func GetOne(logger *logging.Logger, repos person.Repository, ctx context.Context
 		render.JSON(w, r, res)
 	}
 }
+func GetList(logger *logging.Logger, repos person.Repository, ctx context.Context) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var res persondto.ResponseDTO
+
+		all, err := repos.FindAll(ctx)
+		if err != nil {
+			logger.Errorf("failed to find all. Error: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			render.JSON(w, r, fmt.Errorf("failed to find all. Error: %v", err))
+			return
+		}
+		res.Person = all
+		res.ResponseStatus = "ok"
+		render.JSON(w, r, res)
+	}
+}
+
+//TODO create a varification function
+//func Create(logger *logging.Logger, repos person.Repository, ctx context.Context) http.HandlerFunc {
+//	return func(w http.ResponseWriter, r *http.Request) {
+//		var req Request
+//		var res Response
+//		err := render.DecodeJSON(r.Body, &req)
+//		if errors.Is(err, io.EOF) {
+//			logger.Error("request body is empty")
+//			w.WriteHeader(http.StatusBadRequest)
+//			render.JSON(w, r, fmt.Errorf("request body is empty"))
+//			return
+//		}
+//	}
+//}

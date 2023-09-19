@@ -23,19 +23,18 @@ func main() {
 
 	router := chi.NewRouter()
 	router.Use(middleware.RequestID)
-	router.Use(middleware.Logger)
 	router.Use(mwlogger.New(logger))
 	router.Use(middleware.Recoverer)
-	router.Use(middleware.URLFormat)
+	//router.Use(middleware.URLFormat)
 
 	client, err := postgresql.NewClient(context.TODO(), 5, cfg.Storage)
 	defer client.Close()
 	if err != nil {
-		return
+		logger.Fatal(err)
 	}
 	repository := person.NewRepository(client, logger)
 	router.Get("/api/person", ph.GetOne(logger, repository, context.TODO()))
-
+	router.Get("/api/people", ph.GetList(logger, repository, context.TODO()))
 	listener, listenErr := net.Listen("tcp", cfg.Listen.Port)
 	logger.Infof("server is listening port %s", cfg.Listen.Port)
 

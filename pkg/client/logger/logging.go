@@ -49,6 +49,7 @@ type Logger struct {
 	*logrus.Entry
 }
 
+// GetLogger We use it after a method init to get a configurated entity of logger
 func GetLogger() *Logger {
 	return &Logger{e}
 }
@@ -57,7 +58,7 @@ func (l *Logger) GetLoggerWithField(k string, v interface{}) *Logger {
 
 }
 
-// Создаём новую сущность логгирования и настраиваем её
+// Init and configure the entity of logrus
 func Init(cfg *config.Config) {
 	l := logrus.New()
 	l.SetReportCaller(true)
@@ -69,7 +70,7 @@ func Init(cfg *config.Config) {
 			fileName := path.Base(frame.File)
 			return fmt.Sprintf("%s()", frame.Function), fmt.Sprintf("%s:%d", fileName, frame.Line)
 		},
-		//отключаем цвета (зачем?) TODO поиграться с цветами
+		//TODO поиграться с цветами
 		ForceColors:               true,
 		FullTimestamp:             true,
 		EnvironmentOverrideColors: true,
