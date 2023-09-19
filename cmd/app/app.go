@@ -18,7 +18,7 @@ import (
 func main() {
 	cfg := config.GetConfig()
 
-	logging.Init(cfg.Env)
+	logging.Init(cfg)
 	logger := logging.GetLogger()
 
 	router := chi.NewRouter()
@@ -48,12 +48,5 @@ func main() {
 		ReadTimeout:  15 * time.Second,
 	}
 	logger.Fatal(server.Serve(listener))
-	//repository.Delete(context.TODO(), "b46f9850-97f7-4d60-9e8f-88ae58d72906")
-	//repository.Update(context.TODO(), person2.Person{
-	//
-	//	UUID:       "6ebc8437-c7e2-4811-898e-7a002abd44d4",
-	//	Name:       "Yamal",
-	//	FamilyName: "Pilkin",
-	//	Food:       nil,
-	//})
+
 }

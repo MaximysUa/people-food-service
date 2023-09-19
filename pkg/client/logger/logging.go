@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"io"
+	"log"
 	"os"
 	"path"
+	"people-food-service/iternal/config"
 	"runtime"
 )
 
@@ -56,7 +58,7 @@ func (l *Logger) GetLoggerWithField(k string, v interface{}) *Logger {
 }
 
 // Создаём новую сущность логгирования и настраиваем её
-func Init(env string) {
+func Init(cfg *config.Config) {
 	l := logrus.New()
 	l.SetReportCaller(true)
 	//формат возвращаемого значения - текст, так же может быть и json
@@ -90,15 +92,11 @@ func Init(env string) {
 		LogLevels: logrus.AllLevels,
 	})
 
-	switch env {
-	case envLocal:
-		l.SetLevel(logrus.TraceLevel)
-	case envDev:
-		l.SetLevel(logrus.DebugLevel)
-	case envProd:
-		l.SetLevel(logrus.InfoLevel)
-
+	level, err := logrus.ParseLevel(cfg.Env)
+	if err != nil {
+		log.Fatal(err)
 	}
-
+	logrus.SetLevel(level)
+	log.Printf("Logger level is %s", level)
 	e = logrus.NewEntry(l)
 }
