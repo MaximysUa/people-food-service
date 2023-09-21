@@ -9,12 +9,13 @@ import (
 	"net/http"
 	persondto "people-food-service/iternal/person/dto"
 )
-// Validationt name and familyName
+
+// Validation name and familyName
 // It should be not empty and consist only alhpabet characters
 func Validation(r *http.Request) (persondto.RequestDTO, error) {
 	req, err := renderToDTO(r)
-	if err != nil{
-		return req, err	
+	if err != nil {
+		return persondto.RequestDTO{}, err
 	}
 
 	if err := validator.New().Struct(req); err != nil {
@@ -25,16 +26,22 @@ func Validation(r *http.Request) (persondto.RequestDTO, error) {
 	}
 	return req, nil
 }
-//TODO write the validatoin of uuid
-func ValidationUUID(r *http.Request) (persondto.RequestDTO, error){
-	req, err := renderToDTO(r)
-	if err != nil{
-		return req, err	
-	}
 
+// ValidationUUID check uuid field
+// It should be not empty and consist uuid
+func ValidationUUID(r *http.Request) (persondto.RequestDTO, error) {
+	req, err := renderToDTO(r)
+	if err != nil {
+		return persondto.RequestDTO{}, err
+	}
+	err = validator.New().Var(req.UUID, "uuid")
+	if err != nil {
+		return persondto.RequestDTO{}, fmt.Errorf("invalid request. Error: %v", err)
+	}
 	return req, nil
 }
-func renderToDTO(r *http.Request) (persondto.RequestDTO, error){
+
+func renderToDTO(r *http.Request) (persondto.RequestDTO, error) {
 	var req persondto.RequestDTO
 	err := render.DecodeJSON(r.Body, &req)
 	if errors.Is(err, io.EOF) {
@@ -42,7 +49,7 @@ func renderToDTO(r *http.Request) (persondto.RequestDTO, error){
 
 	}
 	if err != nil {
-
 		return req, fmt.Errorf("failed to decode request body. Error: %v", err)
 	}
+	return req, nil
 }

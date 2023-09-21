@@ -15,11 +15,25 @@ import (
 	"time"
 )
 
+const (
+	personURL = "/api/person"
+	peopleURL = "/api/people"
+)
+
 func main() {
 	cfg := config.GetConfig()
+	ctx := context.TODO()
 
 	logging.Init(cfg)
 	logger := logging.GetLogger()
+
+	client, err := postgresql.NewClient(ctx, 5, cfg.Storage)
+	repository := person.NewRepository(client, logger)
+
+	defer client.Close()
+	if err != nil {
+		logger.Fatal(err)
+	}
 
 	router := chi.NewRouter()
 	router.Use(middleware.RequestID)
@@ -27,14 +41,16 @@ func main() {
 	router.Use(middleware.Recoverer)
 	//router.Use(middleware.URLFormat)
 
-	client, err := postgresql.NewClient(context.TODO(), 5, cfg.Storage)
-	defer client.Close()
-	if err != nil {
-		logger.Fatal(err)
-	}
-	repository := person.NewRepository(client, logger)
-	router.Get("/api/person", ph.GetOne(logger, repository, context.TODO()))
-	router.Get("/api/people", ph.GetList(logger, repository, context.TODO()))
+	//TODO create работает не коректно - если прислать запрос с uuid - он его не использует
+	//TODO а генерирует свой, рандомный.  Написать проверку не допускающую одинаковых людей с разными uuid в табл
+	//TODO delete возвращает ошибку, если в табл персон-фуд не было персона с таким uuid
+	//TODO мидлвари не работают
+
+	router.Get(personURL, ph.GetOne(ctx, logger, repository))
+	router.Get(peopleURL, ph.GetList(ctx, logger, repository))
+	router.Post(personURL, ph.Create(ctx, logger, repository))
+	router.Delete(personURL, ph.Delete(ctx, logger, repository))
+
 	listener, listenErr := net.Listen("tcp", cfg.Listen.Port)
 	logger.Infof("server is listening port %s", cfg.Listen.Port)
 

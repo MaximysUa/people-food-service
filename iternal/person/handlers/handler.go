@@ -11,7 +11,7 @@ import (
 	logging "people-food-service/pkg/client/logger"
 )
 
-func GetOne(logger *logging.Logger, repos person.Repository, ctx context.Context) http.HandlerFunc {
+func GetOne(ctx context.Context, logger *logging.Logger, repos person.Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		var res persondto.ResponseDTO
@@ -31,7 +31,7 @@ func GetOne(logger *logging.Logger, repos person.Repository, ctx context.Context
 		render.JSON(w, r, res)
 	}
 }
-func GetList(logger *logging.Logger, repos person.Repository, ctx context.Context) http.HandlerFunc {
+func GetList(ctx context.Context, logger *logging.Logger, repos person.Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var res persondto.ResponseDTO
 
@@ -48,17 +48,49 @@ func GetList(logger *logging.Logger, repos person.Repository, ctx context.Contex
 	}
 }
 
-//TODO create a varification function
-//func Create(logger *logging.Logger, repos person.Repository, ctx context.Context) http.HandlerFunc {
-//	return func(w http.ResponseWriter, r *http.Request) {
-//		var req Request
-//		var res Response
-//		err := render.DecodeJSON(r.Body, &req)
-//		if errors.Is(err, io.EOF) {
-//			logger.Error("request body is empty")
-//			w.WriteHeader(http.StatusBadRequest)
-//			render.JSON(w, r, fmt.Errorf("request body is empty"))
-//			return
-//		}
-//	}
-//}
+func Create(ctx context.Context, logger *logging.Logger, repos person.Repository) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var res persondto.ResponseDTO
+		req, err := helper.Validation(r)
+		if err != nil {
+			logger.Error(err)
+			w.WriteHeader(http.StatusBadRequest)
+			render.JSON(w, r, err)
+			return
+		}
+
+		err = repos.Create(ctx, person.Person(req))
+		if err != nil {
+			logger.Errorf("failed to create person. Error: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			render.JSON(w, r, fmt.Errorf("failed to create person. Error: %v", err))
+			return
+		}
+
+		res.ResponseStatus = "Ok"
+		render.JSON(w, r, res)
+	}
+}
+func Delete(ctx context.Context, logger *logging.Logger, repos person.Repository) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var res persondto.ResponseDTO
+		req, err := helper.ValidationUUID(r)
+		if err != nil {
+			logger.Error(err)
+			w.WriteHeader(http.StatusBadRequest)
+			render.JSON(w, r, err)
+			return
+		}
+
+		err = repos.Delete(ctx, person.Person(req))
+		if err != nil {
+			logger.Errorf("failed to delete person. Error: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			render.JSON(w, r, fmt.Errorf("failed to delete person. Error: %v", err))
+			return
+		}
+
+		res.ResponseStatus = "Ok"
+		render.JSON(w, r, res)
+	}
+}

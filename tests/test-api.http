@@ -1,3 +1,6 @@
+
+
+###
 GET http://localhost:8080//api/person
 Content-Type: application/json
 
@@ -19,9 +22,41 @@ Content-Type: application/json
 GET http://localhost:8080//api/person
 
 
-###
+###Get all func
 GET http://localhost:8080//api/people
 
 
-###
+###Create with right body
+POST http://localhost:8080//api/person
+Content-Type: application/json
 
+{
+  "name": "Диман",
+  "family_name": "Рекрент",
+  "food": [
+    {
+      "uuid": "d41b9758-f344-447f-b512-cc35b89c23e9",
+      "name": "Пицца",
+      "price": 7.85
+    },
+    {
+      "uuid": "41b72d27-c250-4a3a-8c0b-8a7de570a564",
+      "name": "Бурито",
+      "price": 9.55
+    },
+    {
+      "uuid": "63aa08fd-15b1-4cb6-af21-e1e40cbadc6c",
+      "name": "Шавуха",
+      "price": 15.22
+    }]
+}
+###Delete with right body
+DELETE http://localhost:8080//api/person
+Content-Type: application/json
+
+{
+  "uuid": "eb05f38a-862d-4857-98a9-6a0f2352226c",
+  "name": "Диман",
+  "family_name": "Рекрент"
+
+}

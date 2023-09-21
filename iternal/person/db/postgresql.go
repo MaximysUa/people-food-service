@@ -22,10 +22,11 @@ func (r *repository) Create(ctx context.Context, person person.Person) error {
 	q := `
 		INSERT INTO public.person(name, family_name) 
 		VALUES($1, $2)
+		RETURNING id
 		`
 
-	newPers := r.client.QueryRow(ctx, q, person.Name, person.FamilyName)
-	err := newPers.Scan(&person.UUID)
+	newPersUUID := r.client.QueryRow(ctx, q, person.Name, person.FamilyName)
+	err := newPersUUID.Scan(&person.UUID)
 	if err != nil {
 		r.logger.Errorf("faild to scan new person. query:%s\n", formatQuery(q))
 		return err
@@ -36,7 +37,16 @@ func (r *repository) Create(ctx context.Context, person person.Person) error {
 		`
 
 	for _, f := range person.Food {
-		r.client.QueryRow(ctx, sq, person.UUID, f.UUID)
+		_, err := r.client.Exec(ctx, sq, person.UUID, f.UUID)
+		if err != nil {
+			r.logger.Errorf("faild to insert person food. query:%s\n", formatQuery(sq))
+			return err
+		}
+		//if !exec.Insert(){
+		//	err = fmt.Errorf("faild to insert person food. query:%s\n", formatQuery(sq))
+		//	r.logger.Error(err)
+		//	return err
+		//}
 	}
 	return nil
 }
