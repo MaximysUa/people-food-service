@@ -18,19 +18,38 @@ type repository struct {
 func formatQuery(q string) string {
 	return strings.ReplaceAll(strings.ReplaceAll(q, "\t", ""), "\n", " ")
 }
+
+// TODO придумать ошибку, если чел уже есть в бд или возвращать id
 func (r *repository) Create(ctx context.Context, person person.Person) error {
-	q := `
-		INSERT INTO public.person(name, family_name) 
-		VALUES($1, $2)
+	var q string
+	if person.UUID == "" {
+		q = `
+		INSERT INTO public.person(name, family_name)
+		SELECT $1, $2
+		WHERE NOT EXISTS(select name, family_name from person where name = $1::varchar and family_name = $2::varchar)
 		RETURNING id
 		`
+		newPersUUID := r.client.QueryRow(ctx, q, person.Name, person.FamilyName)
+		err := newPersUUID.Scan(&person.UUID)
+		if err != nil {
+			r.logger.Errorf("faild to scan new person. query:%s\n", formatQuery(q))
+			return err
+		}
+	} else {
+		q = `
+		INSERT INTO public.person(id, name, family_name)
+		SELECT $1, $2, $3
+		WHERE NOT EXISTS(select name, family_name from person where name = $2 and family_name = $3)
+		RETURNING id
+		`
+		_, err := r.client.Exec(ctx, q, person.UUID, person.Name, person.FamilyName)
 
-	newPersUUID := r.client.QueryRow(ctx, q, person.Name, person.FamilyName)
-	err := newPersUUID.Scan(&person.UUID)
-	if err != nil {
-		r.logger.Errorf("faild to scan new person. query:%s\n", formatQuery(q))
-		return err
+		if err != nil {
+			r.logger.Errorf("faild to create new person. query:%s\n", formatQuery(q))
+			return err
+		}
 	}
+
 	sq := `
 		INSERT INTO public.person_food(person_id, food_id) 
 		VALUES($1, $2)
@@ -42,11 +61,7 @@ func (r *repository) Create(ctx context.Context, person person.Person) error {
 			r.logger.Errorf("faild to insert person food. query:%s\n", formatQuery(sq))
 			return err
 		}
-		//if !exec.Insert(){
-		//	err = fmt.Errorf("faild to insert person food. query:%s\n", formatQuery(sq))
-		//	r.logger.Error(err)
-		//	return err
-		//}
+
 	}
 	return nil
 }
@@ -185,9 +200,8 @@ func (r *repository) Delete(ctx context.Context, p person.Person) error {
 		return err
 	}
 	if execSq.RowsAffected() == 0 {
-		err = fmt.Errorf("cant find person in table person_food with id: %s\n", p.UUID)
-		r.logger.Errorf(err.Error())
-		return err
+		r.logger.Debugf("cant find person in table person_food with id: %s\n", p.UUID)
+
 	}
 
 	return nil

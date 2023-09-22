@@ -36,15 +36,11 @@ func main() {
 	}
 
 	router := chi.NewRouter()
+	//TODO мидлвари не работают why?
 	router.Use(middleware.RequestID)
 	router.Use(mwlogger.New(logger))
 	router.Use(middleware.Recoverer)
 	//router.Use(middleware.URLFormat)
-
-	//TODO create работает не коректно - если прислать запрос с uuid - он его не использует
-	//TODO а генерирует свой, рандомный.  Написать проверку не допускающую одинаковых людей с разными uuid в табл
-	//TODO delete возвращает ошибку, если в табл персон-фуд не было персона с таким uuid
-	//TODO мидлвари не работают
 
 	router.Get(personURL, ph.GetOne(ctx, logger, repository))
 	router.Get(peopleURL, ph.GetList(ctx, logger, repository))

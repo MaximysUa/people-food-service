@@ -58,4 +58,9 @@ WHERE pf.person_id = '0275a687-a26c-49da-a9ae-8070b3a08abe';
 
 SELECT id, name, family_name
 FROM public.person
-WHERE name = 'Василий' AND family_name = 'Уткин'
+WHERE name = 'Василий' AND family_name = 'Уткин';
+
+INSERT INTO public.person(name, family_name)
+SELECT 'Диман', 'Рек'
+WHERE NOT EXISTS(select name, family_name from person where name = 'Диман' and family_name = 'Рек')
+RETURNING id
