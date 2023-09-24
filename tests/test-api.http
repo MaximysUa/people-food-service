@@ -101,3 +101,12 @@ Content-Type: application/json
         client.assert(response.status === 200, "Response status is not 200");
     });
 %}
+###
+PATCH http://localhost:8080//api/person
+Content-Type: application/json
+
+{
+  "uuid": "208a00f3-76a0-4290-8437-201a96639181",
+  "name": "Диман",
+  "family_name": "Лысый"
+}

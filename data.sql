@@ -64,3 +64,4 @@ INSERT INTO public.person(name, family_name)
 SELECT 'Диман', 'Рек'
 WHERE NOT EXISTS(select name, family_name from person where name = 'Диман' and family_name = 'Рек')
 RETURNING id
+

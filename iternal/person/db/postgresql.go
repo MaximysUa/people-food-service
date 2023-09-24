@@ -163,7 +163,14 @@ func (r *repository) Update(ctx context.Context, person person.Person) error {
 		SET name = $2, family_name = $3 
 		WHERE id = $1
 		`
-	//sq := `UPDATE person_food SET name = $2, family_name = $3 WHERE id = $1;`
+	qDel := `
+		DELETE FROM person_food p 
+		WHERE p.person_id = $1
+		`
+	qIns := `
+		INSERT INTO person_food(person_id, food_id) 
+		VALUES($1, $2) 
+		`
 	exec, err := r.client.Exec(ctx, q, person.UUID, person.Name, person.FamilyName)
 	if err != nil {
 		r.logger.Errorf("Failed with exec the query: %s with id: %s\n", formatQuery(q), person.UUID)
@@ -173,6 +180,20 @@ func (r *repository) Update(ctx context.Context, person person.Person) error {
 		err = fmt.Errorf("cant find person in table person with id: %s\n", person.UUID)
 		r.logger.Errorf(err.Error())
 		return err
+	}
+
+	_, err = r.client.Exec(ctx, qDel, person.UUID)
+	if err != nil {
+		//r.logger.Errorf("Failed with exec the query: %s with id: %s\n", formatQuery(q), person.UUID)
+
+	}
+	for _, val := range person.Food {
+		_, err := r.client.Exec(ctx, qIns, person.UUID, val.UUID)
+		if err != nil {
+			//r.logger.Errorf("Failed with exec the query: %s with id: %s\n", formatQuery(q), person.UUID)
+
+		}
+
 	}
 	return nil
 }

@@ -94,3 +94,33 @@ func Delete(ctx context.Context, logger *logging.Logger, repos person.Repository
 		render.JSON(w, r, res)
 	}
 }
+
+func Update(ctx context.Context, logger *logging.Logger, repos person.Repository) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var res persondto.ResponseDTO
+		req, err := helper.Validation(r)
+		if err != nil {
+			logger.Error(err)
+			w.WriteHeader(http.StatusBadRequest)
+			render.JSON(w, r, err)
+			return
+		}
+		if req.UUID == "" {
+			logger.Errorln("Field ID is required")
+			w.WriteHeader(http.StatusBadRequest)
+			render.JSON(w, r, "Field ID is required")
+			return
+		}
+
+		err = repos.Update(ctx, person.Person(req))
+		if err != nil {
+			logger.Errorf("failed to update person. Error: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			render.JSON(w, r, fmt.Errorf("failed to update person. Error: %v", err))
+			return
+		}
+
+		res.ResponseStatus = "Ok"
+		render.JSON(w, r, res)
+	}
+}

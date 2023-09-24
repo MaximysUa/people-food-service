@@ -45,6 +45,7 @@ func main() {
 	router.Get(personURL, ph.GetOne(ctx, logger, repository))
 	router.Get(peopleURL, ph.GetList(ctx, logger, repository))
 	router.Delete(personURL, ph.Delete(ctx, logger, repository))
+	router.Patch(personURL, ph.Update(ctx, logger, repository))
 
 	listener, listenErr := net.Listen("tcp", cfg.Listen.Port)
 	logger.Infof("server is listening port %s", cfg.Listen.Port)
