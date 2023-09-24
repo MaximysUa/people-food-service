@@ -66,7 +66,7 @@ func Create(ctx context.Context, logger *logging.Logger, repos person.Repository
 			render.JSON(w, r, fmt.Errorf("failed to create person. Error: %v", err))
 			return
 		}
-
+		w.WriteHeader(http.StatusCreated)
 		res.ResponseStatus = "Ok"
 		render.JSON(w, r, res)
 	}

@@ -2,6 +2,7 @@ package person
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"people-food-service/iternal/food"
 	"people-food-service/iternal/person"
@@ -19,7 +20,7 @@ func formatQuery(q string) string {
 	return strings.ReplaceAll(strings.ReplaceAll(q, "\t", ""), "\n", " ")
 }
 
-// TODO придумать ошибку, если чел уже есть в бд или возвращать id
+// TODO Стоит ли возвращать id?
 func (r *repository) Create(ctx context.Context, person person.Person) error {
 	var q string
 	if person.UUID == "" {
@@ -32,8 +33,9 @@ func (r *repository) Create(ctx context.Context, person person.Person) error {
 		newPersUUID := r.client.QueryRow(ctx, q, person.Name, person.FamilyName)
 		err := newPersUUID.Scan(&person.UUID)
 		if err != nil {
-			r.logger.Errorf("faild to scan new person. query:%s\n", formatQuery(q))
-			return err
+
+			//r.logger.Errorln("person is already exist")
+			return errors.New("person is already exist")
 		}
 	} else {
 		q = `

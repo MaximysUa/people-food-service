@@ -41,6 +41,7 @@ func ValidationUUID(r *http.Request) (persondto.RequestDTO, error) {
 	return req, nil
 }
 
+// renderToDTO rendering request to personRequestDTO
 func renderToDTO(r *http.Request) (persondto.RequestDTO, error) {
 	var req persondto.RequestDTO
 	err := render.DecodeJSON(r.Body, &req)

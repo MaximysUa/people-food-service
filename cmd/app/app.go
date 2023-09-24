@@ -40,11 +40,10 @@ func main() {
 	router.Use(middleware.RequestID)
 	router.Use(mwlogger.New(logger))
 	router.Use(middleware.Recoverer)
-	//router.Use(middleware.URLFormat)
 
+	router.Post(personURL, ph.Create(ctx, logger, repository))
 	router.Get(personURL, ph.GetOne(ctx, logger, repository))
 	router.Get(peopleURL, ph.GetList(ctx, logger, repository))
-	router.Post(personURL, ph.Create(ctx, logger, repository))
 	router.Delete(personURL, ph.Delete(ctx, logger, repository))
 
 	listener, listenErr := net.Listen("tcp", cfg.Listen.Port)

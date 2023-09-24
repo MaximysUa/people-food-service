@@ -1,6 +1,6 @@
 
 
-###
+### Successful test: check response status is 200 and content-type is JSON
 GET http://localhost:8080//api/person
 Content-Type: application/json
 
@@ -8,23 +8,52 @@ Content-Type: application/json
   "name": "Игорь",
   "family_name": "Адамов"
 }
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
 
-###
+    client.test("Response content-type is json", function() {
+        var type = response.contentType.mimeType;
+        client.assert(type === "application/json", "Expected 'application/json' but received '" + type + "'");
+    });
+%}
 
+###Successful test: check response status is 400
 GET http://localhost:8080//api/person
 Content-Type: application/json
 
 {
 
 }
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 400, "Response status is not 400");
+    });
 
-###
+%}
+###Successful test: check response status is 400
 GET http://localhost:8080//api/person
 
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 400, "Response status is not 400");
+    });
+%}
 
-###Get all func
+### Successful test: check response status is 200 and content-type is JSON
 GET http://localhost:8080//api/people
 
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+
+    client.test("Response content-type is json", function() {
+        var type = response.contentType.mimeType;
+        client.assert(type === "application/json", "Expected 'application/json' but received '" + type + "'");
+    });
+%}
 
 ###Create with right body
 POST http://localhost:8080//api/person
@@ -32,7 +61,7 @@ Content-Type: application/json
 
 {
   "name": "Диман",
-  "family_name": "Лыско",
+  "family_name": "Л",
   "food": [
     {
       "uuid": "d41b9758-f344-447f-b512-cc35b89c23e9",
@@ -50,13 +79,25 @@ Content-Type: application/json
       "price": 15.22
     }]
 }
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+%}
 ###Delete with right body
 DELETE http://localhost:8080//api/person
 Content-Type: application/json
 
 {
-  "uuid": "040286e1-1b01-4dcf-b685-865673eaddeb",
+  "uuid": "921e0731-26ac-468a-b92e-42d824d4607e",
   "name": "Диман",
   "family_name": "Рекрент"
 
 }
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
