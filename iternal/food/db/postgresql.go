@@ -2,6 +2,8 @@ package db
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"people-food-service/iternal/food"
 	logging "people-food-service/pkg/client/logger"
 	"people-food-service/pkg/client/postgresql"
@@ -13,9 +15,36 @@ type repository struct {
 	logger *logging.Logger
 }
 
-func (r *repository) Create(ctx context.Context, food food.Food) error {
-	//TODO implement me
-	panic("implement me")
+// TODO Shoul i return UUID?
+func (r *repository) Create(ctx context.Context, f food.Food) error {
+	if f.UUID == "" {
+		q := `
+			INSERT INTO public.food(name, price)
+			SELECT $1, $2
+			WHERE NOT EXISTS(select name from food where name = $1::varchar)
+			RETURNING id
+			`
+		newFood := r.client.QueryRow(ctx, q, f.Name, f.Price)
+		err := newFood.Scan(&f.UUID)
+		if err != nil {
+
+			//r.logger.Errorln("person is already exist")
+			return errors.New("food is already exist")
+		}
+	} else {
+		q := `
+			INSERT INTO public.food(id, name, price)
+			SELECT $1, $2, $3
+			WHERE NOT EXISTS(select name from food where name = $1::varchar)
+			RETURNING id
+			`
+		_, err := r.client.Exec(ctx, q, f.UUID, f.Name, f.Price)
+		if err != nil {
+			r.logger.Errorf("faild to create new food. query:%v\n", err)
+			return err
+		}
+	}
+	return nil
 }
 
 func (r *repository) FindAll(ctx context.Context) ([]food.Food, error) {
@@ -44,18 +73,56 @@ func (r *repository) FindAll(ctx context.Context) ([]food.Food, error) {
 }
 
 func (r *repository) FindOne(ctx context.Context, name string) (food.Food, error) {
-	//TODO implement me
-	panic("implement me")
+	var f food.Food
+	q := `
+		SELECT id, name, price
+		FROM public.food
+		WHERE name = $1
+		`
+	row := r.client.QueryRow(ctx, q, name)
+	err := row.Scan(&f.UUID, &f.Name, &f.Price)
+	if err != nil {
+		r.logger.Errorf("Faild with finding food. query:%s\n", formatQuery(q))
+		return food.Food{}, err
+	}
+	return f, nil
 }
 
-func (r *repository) Update(ctx context.Context, food food.Food) error {
-	//TODO implement me
-	panic("implement me")
+func (r *repository) Update(ctx context.Context, f food.Food) error {
+	q := `
+		UPDATE food
+		SET name = $2, price = $3
+		WHERE id = $1
+		`
+	exec, err := r.client.Exec(ctx, q, f.UUID, f.Name, f.Price)
+	if err != nil {
+		r.logger.Errorf("Failed with exec the query: %s with id: %s\n", formatQuery(q), f.UUID)
+		return err
+	}
+	if exec.RowsAffected() == 0 {
+		err = fmt.Errorf("cant find food in table food with id: %s\n", f.UUID)
+		r.logger.Errorf(err.Error())
+		return err
+	}
+	return nil
 }
 
-func (r *repository) Delete(ctx context.Context, food food.Food) error {
-	//TODO implement me
-	panic("implement me")
+func (r *repository) Delete(ctx context.Context, f food.Food) error {
+	q := `
+		DELETE FROM food f 
+		WHERE f.id = $1 
+		`
+	exec, err := r.client.Exec(ctx, q, f.UUID)
+	if err != nil {
+		r.logger.Errorf("Failed with exec the query: %s with id: %s\n", formatQuery(q), f.UUID)
+		return err
+	}
+	if exec.RowsAffected() == 0 {
+		err = fmt.Errorf("cant find food in table food with id: %s\n", f.UUID)
+		r.logger.Errorf(err.Error())
+		return err
+	}
+	return nil
 }
 
 func formatQuery(q string) string {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-chi/render"
+	"github.com/go-playground/validator/v10"
 	"net/http"
 	"people-food-service/iternal/helper"
 	"people-food-service/iternal/person"
@@ -15,7 +16,7 @@ func GetOne(ctx context.Context, logger *logging.Logger, repos person.Repository
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		var res persondto.ResponseDTO
-		req, err := helper.Validation(r)
+		req, err := helper.ValidatePerson(r)
 		if err != nil {
 			logger.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
@@ -51,12 +52,21 @@ func GetList(ctx context.Context, logger *logging.Logger, repos person.Repositor
 func Create(ctx context.Context, logger *logging.Logger, repos person.Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var res persondto.ResponseDTO
-		req, err := helper.Validation(r)
+		req, err := helper.ValidatePerson(r)
 		if err != nil {
 			logger.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
 			render.JSON(w, r, err)
 			return
+		}
+		if req.UUID != "" {
+			err = validator.New().Var(req.UUID, "uuid")
+			if err != nil {
+				logger.Error(err)
+				w.WriteHeader(http.StatusBadRequest)
+				render.JSON(w, r, err)
+				return
+			}
 		}
 
 		err = repos.Create(ctx, person.Person(req))
@@ -74,7 +84,7 @@ func Create(ctx context.Context, logger *logging.Logger, repos person.Repository
 func Delete(ctx context.Context, logger *logging.Logger, repos person.Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var res persondto.ResponseDTO
-		req, err := helper.ValidationUUID(r)
+		req, err := helper.ValidatePersonUUID(r)
 		if err != nil {
 			logger.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
@@ -98,7 +108,7 @@ func Delete(ctx context.Context, logger *logging.Logger, repos person.Repository
 func Update(ctx context.Context, logger *logging.Logger, repos person.Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var res persondto.ResponseDTO
-		req, err := helper.Validation(r)
+		req, err := helper.ValidatePerson(r)
 		if err != nil {
 			logger.Error(err)
 			w.WriteHeader(http.StatusBadRequest)

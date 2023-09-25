@@ -47,7 +47,7 @@ func (r *repository) Create(ctx context.Context, person person.Person) error {
 		_, err := r.client.Exec(ctx, q, person.UUID, person.Name, person.FamilyName)
 
 		if err != nil {
-			r.logger.Errorf("faild to create new person. query:%s\n", formatQuery(q))
+			r.logger.Errorf("faild to create new person. query:%v\n", err)
 			return err
 		}
 	}
@@ -156,7 +156,6 @@ func (r *repository) FindOne(ctx context.Context, name, familyName string) (pers
 	return p, nil
 }
 
-// Update TODO придумать как быть с таблицей person_food
 func (r *repository) Update(ctx context.Context, person person.Person) error {
 	q := `	
 		UPDATE person 
