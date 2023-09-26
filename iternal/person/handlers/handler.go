@@ -25,6 +25,9 @@ func GetOne(ctx context.Context, logger *logging.Logger, repos person.Repository
 		}
 		one, err := repos.FindOne(ctx, req.Name, req.FamilyName)
 		if err != nil {
+			logger.Errorf("failed to find a person. Error: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			render.JSON(w, r, fmt.Errorf("failed to find all. Error: %v", err))
 			return
 		}
 		res.Person = append(res.Person, one)
@@ -94,9 +97,9 @@ func Delete(ctx context.Context, logger *logging.Logger, repos person.Repository
 
 		err = repos.Delete(ctx, person.Person(req))
 		if err != nil {
-			logger.Errorf("failed to delete person. Error: %v", err)
+			logger.Errorf("failed to delete a person. Error: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
-			render.JSON(w, r, fmt.Errorf("failed to delete person. Error: %v", err))
+			render.JSON(w, r, fmt.Errorf("failed to delete a person. Error: %v", err))
 			return
 		}
 

@@ -96,12 +96,12 @@ func ValidateFood(r *http.Request) (fooddto.RequestDTO, error) {
 	if err := validator.New().Struct(req); err != nil {
 		validateErr := err.(validator.ValidationErrors)
 
-		return req, fmt.Errorf("invalid request. Error: %v", validateErr)
+		return fooddto.RequestDTO{}, fmt.Errorf("invalid request. Error: %v", validateErr)
 
 	}
+	if req.Price <= 0.0 {
+		return fooddto.RequestDTO{}, fmt.Errorf("price have to be greater than 0")
+	}
 
-	//TODO нужно проверить что бы прайс был флоатом и больше 0
-	//price := req.Price
-	//reflect.TypeOf(price).
 	return req, nil
 }

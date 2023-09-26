@@ -21,6 +21,7 @@ func formatQuery(q string) string {
 }
 
 // TODO Стоит ли возвращать id?
+// TODO если сущность уже есть нужно вернуть какую-то ошибку, короче пора возвращать uuid
 func (r *repository) Create(ctx context.Context, person person.Person) error {
 	var q string
 	if person.UUID == "" {
