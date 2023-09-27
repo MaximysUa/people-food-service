@@ -20,9 +20,7 @@ func formatQuery(q string) string {
 	return strings.ReplaceAll(strings.ReplaceAll(q, "\t", ""), "\n", " ")
 }
 
-// TODO Стоит ли возвращать id?
-// TODO если сущность уже есть нужно вернуть какую-то ошибку, короче пора возвращать uuid
-func (r *repository) Create(ctx context.Context, person person.Person) error {
+func (r *repository) Create(ctx context.Context, person person.Person) (string, error) {
 	var q string
 	if person.UUID == "" {
 		q = `
@@ -35,8 +33,14 @@ func (r *repository) Create(ctx context.Context, person person.Person) error {
 		err := newPersUUID.Scan(&person.UUID)
 		if err != nil {
 
-			//r.logger.Errorln("person is already exist")
-			return errors.New("person is already exist")
+			err := r.client.QueryRow(ctx, "SELECT id FROM public.person WHERE name = $1 AND family_name = $2",
+				person.Name, person.FamilyName).Scan(&person.UUID)
+			if err != nil {
+				r.logger.Errorf("faild to create new person. query:%v\n", err)
+				return "", err
+			}
+
+			return person.UUID, errors.New("person is already exist")
 		}
 	} else {
 		q = `
@@ -49,7 +53,7 @@ func (r *repository) Create(ctx context.Context, person person.Person) error {
 
 		if err != nil {
 			r.logger.Errorf("faild to create new person. query:%v\n", err)
-			return err
+			return "", err
 		}
 	}
 
@@ -62,11 +66,11 @@ func (r *repository) Create(ctx context.Context, person person.Person) error {
 		_, err := r.client.Exec(ctx, sq, person.UUID, f.UUID)
 		if err != nil {
 			r.logger.Errorf("faild to insert person food. query:%s\n", formatQuery(sq))
-			return err
+			return "", err
 		}
 
 	}
-	return nil
+	return person.UUID, nil
 }
 
 func (r *repository) FindAll(ctx context.Context) ([]person.Person, error) {

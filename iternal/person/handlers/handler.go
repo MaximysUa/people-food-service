@@ -27,7 +27,7 @@ func GetOne(ctx context.Context, logger *logging.Logger, repos person.Repository
 		if err != nil {
 			logger.Errorf("failed to find a person. Error: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
-			render.JSON(w, r, fmt.Errorf("failed to find all. Error: %v", err))
+			render.JSON(w, r, fmt.Sprintf("failed to find all. Error: %v", err))
 			return
 		}
 		res.Person = append(res.Person, one)
@@ -43,7 +43,7 @@ func GetList(ctx context.Context, logger *logging.Logger, repos person.Repositor
 		if err != nil {
 			logger.Errorf("failed to find all. Error: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
-			render.JSON(w, r, fmt.Errorf("failed to find all. Error: %v", err))
+			render.JSON(w, r, fmt.Sprintf("failed to find all. Error: %v", err))
 			return
 		}
 		res.Person = all
@@ -72,14 +72,25 @@ func Create(ctx context.Context, logger *logging.Logger, repos person.Repository
 			}
 		}
 
-		err = repos.Create(ctx, person.Person(req))
-		if err != nil {
+		uuid, err := repos.Create(ctx, person.Person(req))
+		if err != nil && uuid == "" {
 			logger.Errorf("failed to create person. Error: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
-			render.JSON(w, r, fmt.Errorf("failed to create person. Error: %v", err))
+			render.JSON(w, r, fmt.Sprintf("failed to create person. Error: %v", err))
+			return
+		} else if err != nil && uuid != "" {
+			logger.Debugf("failed to create person. Error: %v", err)
+			w.WriteHeader(http.StatusBadRequest)
+			render.JSON(w, r, fmt.Sprintf("person already exists. uuid: %s", uuid))
 			return
 		}
 		w.WriteHeader(http.StatusCreated)
+		res.Person = append(res.Person, person.Person{
+			UUID:       uuid,
+			Name:       req.Name,
+			FamilyName: req.FamilyName,
+			Food:       req.Food,
+		})
 		res.ResponseStatus = "Ok"
 		render.JSON(w, r, res)
 	}
@@ -99,7 +110,7 @@ func Delete(ctx context.Context, logger *logging.Logger, repos person.Repository
 		if err != nil {
 			logger.Errorf("failed to delete a person. Error: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
-			render.JSON(w, r, fmt.Errorf("failed to delete a person. Error: %v", err))
+			render.JSON(w, r, fmt.Sprintf("failed to delete a person. Error: %v", err))
 			return
 		}
 
@@ -129,10 +140,10 @@ func Update(ctx context.Context, logger *logging.Logger, repos person.Repository
 		if err != nil {
 			logger.Errorf("failed to update person. Error: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
-			render.JSON(w, r, fmt.Errorf("failed to update person. Error: %v", err))
+			render.JSON(w, r, fmt.Sprintf("failed to update person. Error: %v", err))
 			return
 		}
-
+		res.Person = append(res.Person, person.Person(req))
 		res.ResponseStatus = "Ok"
 		render.JSON(w, r, res)
 	}

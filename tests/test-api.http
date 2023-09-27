@@ -60,7 +60,7 @@ POST http://localhost:8080//api/person
 Content-Type: application/json
 
 {
-  "name": "Диман",
+  "name": "Дима",
   "family_name": "Л",
   "food": [
     {

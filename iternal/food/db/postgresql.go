@@ -15,8 +15,7 @@ type repository struct {
 	logger *logging.Logger
 }
 
-// TODO Shoul i return UUID?
-func (r *repository) Create(ctx context.Context, f food.Food) error {
+func (r *repository) Create(ctx context.Context, f food.Food) (string, error) {
 	if f.UUID == "" {
 		q := `
 			INSERT INTO public.food(name, price)
@@ -27,9 +26,14 @@ func (r *repository) Create(ctx context.Context, f food.Food) error {
 		newFood := r.client.QueryRow(ctx, q, f.Name, f.Price)
 		err := newFood.Scan(&f.UUID)
 		if err != nil {
+			err := r.client.QueryRow(ctx, "SELECT id FROM public.food WHERE name = $1 AND price = $2",
+				f.Name, f.Price).Scan(&f.UUID)
+			if err != nil {
+				r.logger.Errorf("faild to create new food. query:%v\n", err)
+				return "", err
+			}
 
-			//r.logger.Errorln("person is already exist")
-			return errors.New("food is already exist")
+			return f.UUID, errors.New("food is already exist")
 		}
 	} else {
 		q := `
@@ -41,10 +45,10 @@ func (r *repository) Create(ctx context.Context, f food.Food) error {
 		_, err := r.client.Exec(ctx, q, f.UUID, f.Name, f.Price)
 		if err != nil {
 			r.logger.Errorf("faild to create new food. query:%v\n", err)
-			return err
+			return "", err
 		}
 	}
-	return nil
+	return f.UUID, nil
 }
 
 func (r *repository) FindAll(ctx context.Context) ([]food.Food, error) {
