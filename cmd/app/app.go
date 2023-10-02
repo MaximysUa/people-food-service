@@ -19,8 +19,9 @@ func main() {
 
 	logging.Init(cfg)
 	logger := logging.GetLogger()
-
+	//TODO how and where create new dbs if they are not exist
 	client, err := postgresql.NewClient(ctx, 5, cfg.Storage)
+
 	pRep := person.NewRepository(client, logger)
 	fRep := food.NewRepository(client, logger)
 	defer client.Close()

@@ -22,6 +22,11 @@ func formatQuery(q string) string {
 
 func (r *repository) Create(ctx context.Context, person person.Person) (string, error) {
 	var q string
+	tx, err := r.client.Begin(ctx)
+	if err != nil {
+		r.logger.Errorf("faild to create transaction. err: %v", err)
+		return "", err
+	}
 	if person.UUID == "" {
 		q = `
 		INSERT INTO public.person(name, family_name)
@@ -33,13 +38,17 @@ func (r *repository) Create(ctx context.Context, person person.Person) (string, 
 		err := newPersUUID.Scan(&person.UUID)
 		if err != nil {
 
-			err := r.client.QueryRow(ctx, "SELECT id FROM public.person WHERE name = $1 AND family_name = $2",
+			err = r.client.QueryRow(ctx, "SELECT id FROM public.person WHERE name = $1 AND family_name = $2",
 				person.Name, person.FamilyName).Scan(&person.UUID)
 			if err != nil {
 				r.logger.Errorf("faild to create new person. query:%v\n", err)
 				return "", err
 			}
 
+			err := tx.Rollback(ctx)
+			if err != nil {
+				return "", err
+			}
 			return person.UUID, errors.New("person is already exist")
 		}
 	} else {
@@ -53,6 +62,10 @@ func (r *repository) Create(ctx context.Context, person person.Person) (string, 
 
 		if err != nil {
 			r.logger.Errorf("faild to create new person. query:%v\n", err)
+			err := tx.Rollback(ctx)
+			if err != nil {
+				return "", err
+			}
 			return "", err
 		}
 	}
@@ -66,9 +79,18 @@ func (r *repository) Create(ctx context.Context, person person.Person) (string, 
 		_, err := r.client.Exec(ctx, sq, person.UUID, f.UUID)
 		if err != nil {
 			r.logger.Errorf("faild to insert person food. query:%s\n", formatQuery(sq))
+			err := tx.Rollback(ctx)
+			if err != nil {
+				return "", err
+			}
 			return "", err
 		}
 
+	}
+	err = tx.Commit(ctx)
+	if err != nil {
+		r.logger.Errorf("faild to commit transaction. err: %v", err)
+		return "", err
 	}
 	return person.UUID, nil
 }
@@ -162,6 +184,11 @@ func (r *repository) FindOne(ctx context.Context, name, familyName string) (pers
 }
 
 func (r *repository) Update(ctx context.Context, person person.Person) error {
+	tx, err := r.client.Begin(ctx)
+	if err != nil {
+		r.logger.Errorf("faild to create transaction. err: %v", err)
+		return err
+	}
 	q := `	
 		UPDATE person 
 		SET name = $2, family_name = $3 
@@ -178,31 +205,57 @@ func (r *repository) Update(ctx context.Context, person person.Person) error {
 	exec, err := r.client.Exec(ctx, q, person.UUID, person.Name, person.FamilyName)
 	if err != nil {
 		r.logger.Errorf("Failed with exec the query: %s with id: %s\n", formatQuery(q), person.UUID)
+		err := tx.Rollback(ctx)
+		if err != nil {
+			return err
+		}
 		return err
 	}
 	if exec.RowsAffected() == 0 {
 		err = fmt.Errorf("cant find person in table person with id: %s\n", person.UUID)
 		r.logger.Errorf(err.Error())
+		err := tx.Rollback(ctx)
+		if err != nil {
+			return err
+		}
 		return err
 	}
 
 	_, err = r.client.Exec(ctx, qDel, person.UUID)
 	if err != nil {
+		err := tx.Rollback(ctx)
+		if err != nil {
+			return err
+		}
 		//r.logger.Errorf("Failed with exec the query: %s with id: %s\n", formatQuery(q), person.UUID)
 
 	}
 	for _, val := range person.Food {
 		_, err := r.client.Exec(ctx, qIns, person.UUID, val.UUID)
 		if err != nil {
+			err := tx.Rollback(ctx)
+			if err != nil {
+				return err
+			}
 			//r.logger.Errorf("Failed with exec the query: %s with id: %s\n", formatQuery(q), person.UUID)
 
 		}
 
 	}
+	err = tx.Commit(ctx)
+	if err != nil {
+		r.logger.Errorf("faild to commit transaction. err: %v", err)
+		return err
+	}
 	return nil
 }
 
 func (r *repository) Delete(ctx context.Context, p person.Person) error {
+	tx, err := r.client.Begin(ctx)
+	if err != nil {
+		r.logger.Errorf("faild to create transaction. err: %v", err)
+		return err
+	}
 	q := `
 		DELETE FROM person p 
 		WHERE p.id = $1 
@@ -213,28 +266,49 @@ func (r *repository) Delete(ctx context.Context, p person.Person) error {
 		`
 	exec, err := r.client.Exec(ctx, q, p.UUID)
 	if err != nil {
+		err := tx.Rollback(ctx)
+		if err != nil {
+			return err
+		}
 		r.logger.Errorf("Failed with exec the query: %s with id: %s\n", formatQuery(q), p.UUID)
 		return err
 	}
 	execSq, err := r.client.Exec(ctx, sq, p.UUID)
 	if err != nil {
 		r.logger.Errorf("Failed with exec the query: %s with id: %s\n", formatQuery(sq), p.UUID)
+		err := tx.Rollback(ctx)
+		if err != nil {
+			return err
+		}
 		return err
 	}
 	if exec.RowsAffected() == 0 {
 		err = fmt.Errorf("cant find person in table person with id: %s\n", p.UUID)
 		r.logger.Errorf(err.Error())
+		err := tx.Rollback(ctx)
+		if err != nil {
+			return err
+		}
 		return err
 	}
 	if execSq.RowsAffected() == 0 {
 		r.logger.Debugf("cant find person in table person_food with id: %s\n", p.UUID)
+		err := tx.Rollback(ctx)
+		if err != nil {
+			return err
+		}
 
 	}
-
+	err = tx.Commit(ctx)
+	if err != nil {
+		r.logger.Errorf("faild to commit transaction. err: %v", err)
+		return err
+	}
 	return nil
 }
 
 func NewRepository(client postgresql.Client, logger *logging.Logger) person.Repository {
+
 	return &repository{
 		client: client,
 		logger: logger,

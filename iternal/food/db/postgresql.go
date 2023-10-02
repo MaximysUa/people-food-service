@@ -16,6 +16,11 @@ type repository struct {
 }
 
 func (r *repository) Create(ctx context.Context, f food.Food) (string, error) {
+	tx, err := r.client.Begin(ctx)
+	if err != nil {
+		r.logger.Errorf("faild to create a transaction. err: %v\n", err)
+		return "", err
+	}
 	if f.UUID == "" {
 		q := `
 			INSERT INTO public.food(name, price)
@@ -29,10 +34,17 @@ func (r *repository) Create(ctx context.Context, f food.Food) (string, error) {
 			err := r.client.QueryRow(ctx, "SELECT id FROM public.food WHERE name = $1 AND price = $2",
 				f.Name, f.Price).Scan(&f.UUID)
 			if err != nil {
-				r.logger.Errorf("faild to create new food. query:%v\n", err)
+				r.logger.Errorf("faild to create new food. err: %v\n", err)
+				err := tx.Rollback(ctx)
+				if err != nil {
+					return "", err
+				}
 				return "", err
 			}
-
+			err = tx.Rollback(ctx)
+			if err != nil {
+				return "", err
+			}
 			return f.UUID, errors.New("food is already exist")
 		}
 	} else {
@@ -44,9 +56,19 @@ func (r *repository) Create(ctx context.Context, f food.Food) (string, error) {
 			`
 		_, err := r.client.Exec(ctx, q, f.UUID, f.Name, f.Price)
 		if err != nil {
-			r.logger.Errorf("faild to create new food. query:%v\n", err)
+			r.logger.Errorf("faild to create new food. err: %v\n", err)
+			err := tx.Rollback(ctx)
+			if err != nil {
+				return "", err
+			}
 			return "", err
 		}
+	}
+	err = tx.Commit(ctx)
+	if err != nil {
+
+		r.logger.Errorf("faild to commit a transaction. err: %v\n", err)
+		return "", err
 	}
 	return f.UUID, nil
 }
@@ -93,6 +115,11 @@ func (r *repository) FindOne(ctx context.Context, name string) (food.Food, error
 }
 
 func (r *repository) Update(ctx context.Context, f food.Food) error {
+	tx, err := r.client.Begin(ctx)
+	if err != nil {
+		r.logger.Errorf("failed to create a transaction, err: %v\n", err)
+		return err
+	}
 	q := `
 		UPDATE food
 		SET name = $2, price = $3
@@ -101,17 +128,35 @@ func (r *repository) Update(ctx context.Context, f food.Food) error {
 	exec, err := r.client.Exec(ctx, q, f.UUID, f.Name, f.Price)
 	if err != nil {
 		r.logger.Errorf("Failed with exec the query: %s with id: %s\n", formatQuery(q), f.UUID)
+		err := tx.Rollback(ctx)
+		if err != nil {
+			return err
+		}
 		return err
 	}
 	if exec.RowsAffected() == 0 {
 		err = fmt.Errorf("cant find food in table food with id: %s\n", f.UUID)
 		r.logger.Errorf(err.Error())
+		err := tx.Rollback(ctx)
+		if err != nil {
+			return err
+		}
+		return err
+	}
+	err = tx.Commit(ctx)
+	if err != nil {
+		r.logger.Errorf("faild to commit a transaction. err: %v\n", err)
 		return err
 	}
 	return nil
 }
 
 func (r *repository) Delete(ctx context.Context, f food.Food) error {
+	tx, err := r.client.Begin(ctx)
+	if err != nil {
+		r.logger.Errorf("faild to create a transaction. err: %v\n", err)
+		return err
+	}
 	q := `
 		DELETE FROM food f 
 		WHERE f.id = $1 
@@ -119,11 +164,26 @@ func (r *repository) Delete(ctx context.Context, f food.Food) error {
 	exec, err := r.client.Exec(ctx, q, f.UUID)
 	if err != nil {
 		r.logger.Errorf("Failed with exec the query: %s with id: %s\n", formatQuery(q), f.UUID)
+		err := tx.Rollback(ctx)
+		if err != nil {
+			return err
+		}
 		return err
 	}
 	if exec.RowsAffected() == 0 {
 		err = fmt.Errorf("cant find food in table food with id: %s\n", f.UUID)
 		r.logger.Errorf(err.Error())
+		err := tx.Rollback(ctx)
+		if err != nil {
+			return err
+		}
+
+		return err
+	}
+	err = tx.Commit(ctx)
+	if err != nil {
+
+		r.logger.Errorf("faild to commit a transaction. err: %v\n", err)
 		return err
 	}
 	return nil
