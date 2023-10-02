@@ -6,9 +6,9 @@ import (
 	"encoding/json"
 	"github.com/go-chi/chi/v5"
 	"github.com/golang/mock/gomock"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"net/http/httptest"
-	"people-food-service/iternal/config"
 	"people-food-service/iternal/food"
 	fooddto "people-food-service/iternal/food/dto"
 	mock_food "people-food-service/iternal/food/mock"
@@ -31,7 +31,7 @@ func TestHandler_GetOne(t *testing.T) {
 			inputFood: fooddto.RequestDTO{
 				UUID:  "",
 				Name:  "Пицца",
-				Price: 0,
+				Price: 7.85,
 			},
 			mockBehavior: func(s *mock_food.MockRepository, f fooddto.RequestDTO) {
 				s.EXPECT().FindOne(context.TODO(), f.Name).Return(food.Food{
@@ -49,7 +49,7 @@ func TestHandler_GetOne(t *testing.T) {
 						Price: 7.85,
 					},
 				},
-				ResponseStatus: "OK",
+				ResponseStatus: "ok",
 			},
 		},
 	}
@@ -57,14 +57,17 @@ func TestHandler_GetOne(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			c := gomock.NewController(t)
 			defer c.Finish()
-			cfg := config.GetConfig()
+
 			repo := mock_food.NewMockRepository(c)
 			testCase.mockBehavior(repo, testCase.inputFood)
-			logging.Init(cfg)
-			logger := logging.GetLogger()
+			l := logrus.New()
+			level, _ := logrus.ParseLevel("trace")
+			l.SetLevel(level)
+			le := logrus.NewEntry(l)
+			logger := logging.Logger{le}
 			router := chi.NewRouter()
-			//TODO как запихнуть туда другой логер?
-			router.Get("/api/food", GetOne(context.TODO(), logger, repo))
+
+			router.Get("/api/food", GetOne(context.TODO(), &logger, repo))
 
 			w := httptest.NewRecorder()
 			marshal, err := json.Marshal(testCase.inputFood)
@@ -74,8 +77,9 @@ func TestHandler_GetOne(t *testing.T) {
 			req := httptest.NewRequest("GET", "/api/food", bytes.NewReader(marshal))
 
 			router.ServeHTTP(w, req)
-
-			require.Equal(t, testCase.expectedResponseBody, req.GetBody)
+			var resp fooddto.ResponseDTO
+			err = json.Unmarshal([]byte(w.Body.String()), &resp)
+			require.Equal(t, testCase.expectedResponseBody, resp)
 		})
 	}
 }
