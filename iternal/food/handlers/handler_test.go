@@ -3,10 +3,12 @@ package fh
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"github.com/go-chi/chi/v5"
 	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"net/http/httptest"
+	"people-food-service/iternal/config"
 	"people-food-service/iternal/food"
 	fooddto "people-food-service/iternal/food/dto"
 	mock_food "people-food-service/iternal/food/mock"
@@ -36,7 +38,7 @@ func TestHandler_GetOne(t *testing.T) {
 					UUID:  "d41b9758-f344-447f-b512-cc35b89c23e9",
 					Name:  "Пицца",
 					Price: 7.85,
-				})
+				}, nil)
 			},
 			expectedStatusCode: 200,
 			expectedResponseBody: fooddto.ResponseDTO{
@@ -55,20 +57,25 @@ func TestHandler_GetOne(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			c := gomock.NewController(t)
 			defer c.Finish()
-
+			cfg := config.GetConfig()
 			repo := mock_food.NewMockRepository(c)
 			testCase.mockBehavior(repo, testCase.inputFood)
-
+			logging.Init(cfg)
+			logger := logging.GetLogger()
 			router := chi.NewRouter()
-			router.Get("/api/food", GetOne(context.TODO(), logging.GetLogger(), repo))
+			//TODO как запихнуть туда другой логер?
+			router.Get("/api/food", GetOne(context.TODO(), logger, repo))
 
 			w := httptest.NewRecorder()
-			req := httptest.NewRequest("GET", "/api/food", bytes.NewBufferString(testCase.inputFood.Name))
+			marshal, err := json.Marshal(testCase.inputFood)
+			if err != nil {
+				return
+			}
+			req := httptest.NewRequest("GET", "/api/food", bytes.NewReader(marshal))
 
 			router.ServeHTTP(w, req)
 
-			assert.Equal(t, testCase.expectedStatusCode, w.Code)
-			assert.Equal(t, testCase.expectedResponseBody, w.Body.String())
+			require.Equal(t, testCase.expectedResponseBody, req.GetBody)
 		})
 	}
 }

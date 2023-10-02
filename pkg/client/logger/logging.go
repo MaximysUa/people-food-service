@@ -11,12 +11,6 @@ import (
 	"runtime"
 )
 
-const (
-	envLocal = "local"
-	envDev   = "dev"
-	envProd  = "prod"
-)
-
 // сущность для записи сразу в файл и оутпут
 type writerHook struct {
 	Writer    []io.Writer
