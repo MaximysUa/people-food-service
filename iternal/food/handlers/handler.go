@@ -11,28 +11,40 @@ import (
 	"people-food-service/iternal/helper"
 	logging "people-food-service/pkg/client/logger"
 )
+
 const (
-	StatusOK = "OK"
-	)
+	StatusOK  = "OK"
+	StatusErr = "ERROR"
+)
+
+// TODO подумать как правильно и что правильнее возвращать пользователю
+// TODO возможно просто в статусе передавать ошибку, зачем нужна еще 1 сущность
 func GetOne(ctx context.Context, logger *logging.Logger, repos food.Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
 		var res fooddto.ResponseDTO
 		f, err := helper.ValidateFood(r)
 		if err != nil {
 			logger.Error(err)
+
 			w.WriteHeader(http.StatusBadRequest)
-			render.JSON(w, r, err)
+			res.Err = err.Error()
+			res.ResponseStatus = StatusErr
+			render.JSON(w, r, res)
 			return
 		}
 		one, err := repos.FindOne(ctx, f.Name)
 		if err != nil {
 			logger.Errorf("failed to find food. Error: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
-			render.JSON(w, r, fmt.Sprintf("failed to find food. Error: %v", err))
+
+			res.Err = err.Error()
+			render.JSON(w, r, res)
 			return
 		}
 		res.Food = append(res.Food, one)
 		res.ResponseStatus = StatusOK
+
 		render.JSON(w, r, res)
 	}
 }

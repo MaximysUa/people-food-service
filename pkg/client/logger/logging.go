@@ -91,7 +91,7 @@ func Init(cfg *config.Config) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	logrus.SetLevel(level)
+	l.SetLevel(level)
 	log.Printf("Logger level is %s", level)
 	e = logrus.NewEntry(l)
 }

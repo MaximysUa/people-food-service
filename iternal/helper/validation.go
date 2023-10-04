@@ -11,6 +11,8 @@ import (
 	persondto "people-food-service/iternal/person/dto"
 )
 
+//TODO write errors to send it to users
+
 // ValidatePerson name and familyName
 // It should be not empty and consist only alhpabet characters
 func ValidatePerson(r *http.Request) (persondto.RequestDTO, error) {

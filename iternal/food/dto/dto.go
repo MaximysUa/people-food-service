@@ -13,4 +13,5 @@ type RequestDTO struct {
 type ResponseDTO struct {
 	Food           []food.Food `yaml:"food"`
 	ResponseStatus string      `yaml:"response-status"`
+	Err            string      `yaml:"err"`
 }

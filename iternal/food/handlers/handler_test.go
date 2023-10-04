@@ -8,6 +8,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
+	"net/http"
 	"net/http/httptest"
 	"people-food-service/iternal/food"
 	fooddto "people-food-service/iternal/food/dto"
@@ -49,7 +50,23 @@ func TestHandler_GetOne(t *testing.T) {
 						Price: 7.85,
 					},
 				},
-				ResponseStatus: "ok",
+				ResponseStatus: "OK",
+			},
+		},
+		{
+			name: "Empty name",
+			inputFood: fooddto.RequestDTO{
+				UUID:  "",
+				Name:  "",
+				Price: 0,
+			},
+			mockBehavior: func(s *mock_food.MockRepository, f fooddto.RequestDTO) {
+
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponseBody: fooddto.ResponseDTO{
+				Food:           []food.Food(nil),
+				ResponseStatus: "",
 			},
 		},
 	}
@@ -79,6 +96,8 @@ func TestHandler_GetOne(t *testing.T) {
 			router.ServeHTTP(w, req)
 			var resp fooddto.ResponseDTO
 			err = json.Unmarshal([]byte(w.Body.String()), &resp)
+
+			require.Equal(t, testCase.expectedStatusCode, w.Code)
 			require.Equal(t, testCase.expectedResponseBody, resp)
 		})
 	}
