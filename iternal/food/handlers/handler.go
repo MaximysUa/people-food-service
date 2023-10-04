@@ -11,7 +11,9 @@ import (
 	"people-food-service/iternal/helper"
 	logging "people-food-service/pkg/client/logger"
 )
-
+const (
+	StatusOK = "OK"
+	)
 func GetOne(ctx context.Context, logger *logging.Logger, repos food.Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var res fooddto.ResponseDTO
@@ -30,7 +32,7 @@ func GetOne(ctx context.Context, logger *logging.Logger, repos food.Repository) 
 			return
 		}
 		res.Food = append(res.Food, one)
-		res.ResponseStatus = "ok"
+		res.ResponseStatus = StatusOK
 		render.JSON(w, r, res)
 	}
 }
@@ -46,7 +48,7 @@ func GetList(ctx context.Context, logger *logging.Logger, repos food.Repository)
 			return
 		}
 		res.Food = all
-		res.ResponseStatus = "ok"
+		res.ResponseStatus = StatusOK
 		render.JSON(w, r, res)
 	}
 }
@@ -87,7 +89,7 @@ func Create(ctx context.Context, logger *logging.Logger, repos food.Repository) 
 			Name:  req.Name,
 			Price: req.Price,
 		})
-		res.ResponseStatus = "Ok"
+		res.ResponseStatus = StatusOK
 		render.JSON(w, r, res)
 	}
 }
@@ -110,7 +112,7 @@ func Delete(ctx context.Context, logger *logging.Logger, repos food.Repository) 
 			render.JSON(w, r, fmt.Sprintf("failed to delete food. Error: %v", err))
 			return
 		}
-		res.ResponseStatus = "Ok"
+		res.ResponseStatus = StatusOK
 		render.JSON(w, r, res)
 	}
 }
@@ -137,7 +139,7 @@ func Update(ctx context.Context, logger *logging.Logger, repos food.Repository) 
 			render.JSON(w, r, fmt.Sprintf("failed to update food. Error: %v", err))
 			return
 		}
-		res.ResponseStatus = "Ok"
+		res.ResponseStatus = StatusOK
 		render.JSON(w, r, res)
 	}
 }
