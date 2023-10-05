@@ -11,8 +11,6 @@ import (
 	persondto "people-food-service/iternal/person/dto"
 )
 
-
-
 // ValidatePerson name and familyName
 // It should be not empty and consist only alhpabet characters
 func ValidatePerson(r *http.Request) (persondto.RequestDTO, error) {
@@ -24,7 +22,8 @@ func ValidatePerson(r *http.Request) (persondto.RequestDTO, error) {
 	if err := validator.New().Struct(req); err != nil {
 		//validateErr := err.(validator.ValidationErrors)
 
-		return req, fmt.Errorf("strings: %s, %s is incorrect. Field "Name" and "Family name" should be not empty and consists only alphabet characters", req.Name, req.FamilyName)
+		return req, fmt.Errorf("field 'Name' and 'Family name' " +
+			"should be not empty and consists only alphabet characters")
 
 	}
 	return req, nil
@@ -39,7 +38,8 @@ func ValidatePersonUUID(r *http.Request) (persondto.RequestDTO, error) {
 	}
 	err = validator.New().Var(req.UUID, "uuid")
 	if err != nil {
-		return persondto.RequestDTO{}, fmt.Errorf("string: %s is not a uuid. Field "UUID" should be not empty and consists uuid", req.UUID)
+		return persondto.RequestDTO{}, fmt.Errorf("field 'UUID' " +
+			"should be not empty and consists uuid")
 	}
 	return req, nil
 }
@@ -81,7 +81,8 @@ func ValidateFoodUUID(r *http.Request) (fooddto.RequestDTO, error) {
 	}
 	err = validator.New().Var(req.UUID, "uuid")
 	if err != nil {
-		return fooddto.RequestDTO{}, fmt.Errorf("string: %s is not a uuid. Field "UUID" should be not empty and consists uuid", req.UUID)
+		return fooddto.RequestDTO{}, fmt.Errorf("field 'UUID' " +
+			"should be not empty and consists uuid")
 	}
 	return req, nil
 }
@@ -98,7 +99,8 @@ func ValidateFood(r *http.Request) (fooddto.RequestDTO, error) {
 	if err := validator.New().Struct(req); err != nil {
 		//validateErr := err.(validator.ValidationErrors)
 
-		return fooddto.RequestDTO{}, fmt.Errorf("string: %s is incorrect. Field "Name" should be not empty and consists only alphabet characters", req.Name)
+		return fooddto.RequestDTO{}, fmt.Errorf("field 'Name' " +
+			"should be not empty and consists only alphabet characters")
 
 	}
 	if req.Price <= 0.0 {

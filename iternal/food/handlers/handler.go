@@ -14,11 +14,9 @@ import (
 
 const (
 	StatusOK  = "OK"
-	StatusErr = "ERROR"
+	StatusErr = "ERROR: "
 )
 
-// TODO подумать как правильно и что правильнее возвращать пользователю
-// TODO возможно просто в статусе передавать ошибку, зачем нужна еще 1 сущность
 func GetOne(ctx context.Context, logger *logging.Logger, repos food.Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
@@ -28,8 +26,8 @@ func GetOne(ctx context.Context, logger *logging.Logger, repos food.Repository) 
 			logger.Error(err)
 
 			w.WriteHeader(http.StatusBadRequest)
-			res.Err = err.Error()
-			res.ResponseStatus = StatusErr
+
+			res.ResponseStatus = StatusErr + err.Error()
 			render.JSON(w, r, res)
 			return
 		}
@@ -38,7 +36,7 @@ func GetOne(ctx context.Context, logger *logging.Logger, repos food.Repository) 
 			logger.Errorf("failed to find food. Error: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
 
-			res.Err = err.Error()
+			res.ResponseStatus = StatusErr + err.Error()
 			render.JSON(w, r, res)
 			return
 		}
@@ -56,7 +54,9 @@ func GetList(ctx context.Context, logger *logging.Logger, repos food.Repository)
 		if err != nil {
 			logger.Errorf("failed to find all. Error: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
-			render.JSON(w, r, fmt.Sprintf("failed to find all. Error: %v", err))
+			res.ResponseStatus = StatusErr + fmt.Sprintf("failed to find all. Error: %v", err)
+			render.JSON(w, r, res)
+
 			return
 		}
 		res.Food = all
@@ -71,7 +71,8 @@ func Create(ctx context.Context, logger *logging.Logger, repos food.Repository) 
 		if err != nil {
 			logger.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
-			render.JSON(w, r, err)
+			res.ResponseStatus = StatusErr + err.Error()
+			render.JSON(w, r, res)
 			return
 		}
 		if req.UUID != "" {
@@ -79,7 +80,8 @@ func Create(ctx context.Context, logger *logging.Logger, repos food.Repository) 
 			if err != nil {
 				logger.Error(err)
 				w.WriteHeader(http.StatusBadRequest)
-				render.JSON(w, r, err)
+				res.ResponseStatus = StatusErr + err.Error()
+				render.JSON(w, r, res)
 				return
 			}
 		}
@@ -87,12 +89,16 @@ func Create(ctx context.Context, logger *logging.Logger, repos food.Repository) 
 		if err != nil && uuid == "" {
 			logger.Errorf("failed to create food. Error: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
-			render.JSON(w, r, fmt.Sprintf("failed to create food. Error: %v", err))
+			res.ResponseStatus = StatusErr + fmt.Sprintf("failed to create food. Error: %v", err)
+			render.JSON(w, r, res)
+
 			return
 		} else if err != nil && uuid != "" {
 			logger.Errorf("failed to create food. Error: %v", err)
 			w.WriteHeader(http.StatusBadRequest)
-			render.JSON(w, r, fmt.Sprintf("food already exists. uuid: %s", uuid))
+			res.ResponseStatus = StatusErr + fmt.Sprintf("food already exists. uuid: %s", uuid)
+			render.JSON(w, r, res)
+
 			return
 		}
 		w.WriteHeader(http.StatusCreated)
@@ -113,7 +119,8 @@ func Delete(ctx context.Context, logger *logging.Logger, repos food.Repository) 
 		if err != nil {
 			logger.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
-			render.JSON(w, r, err)
+			res.ResponseStatus = StatusErr + err.Error()
+			render.JSON(w, r, res)
 			return
 		}
 
@@ -121,9 +128,12 @@ func Delete(ctx context.Context, logger *logging.Logger, repos food.Repository) 
 		if err != nil {
 			logger.Errorf("failed to delete food. Error: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
-			render.JSON(w, r, fmt.Sprintf("failed to delete food. Error: %v", err))
+			res.ResponseStatus = StatusErr + fmt.Sprintf("failed to delete food. Error: %v", err)
+			render.JSON(w, r, res)
+
 			return
 		}
+		w.WriteHeader(http.StatusOK)
 		res.ResponseStatus = StatusOK
 		render.JSON(w, r, res)
 	}
@@ -135,20 +145,25 @@ func Update(ctx context.Context, logger *logging.Logger, repos food.Repository) 
 		if err != nil {
 			logger.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
-			render.JSON(w, r, err)
+			res.ResponseStatus = StatusErr + err.Error()
+			render.JSON(w, r, res)
 			return
 		}
 		if req.UUID == "" {
-			logger.Errorln("Field ID is required")
+			logger.Errorln("field ID is required")
 			w.WriteHeader(http.StatusBadRequest)
-			render.JSON(w, r, "Field ID is required")
+			res.ResponseStatus = StatusErr + "field ID is required"
+			render.JSON(w, r, res)
+
 			return
 		}
 		err = repos.Update(ctx, food.Food(req))
 		if err != nil {
 			logger.Errorf("failed to update food. Error: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
-			render.JSON(w, r, fmt.Sprintf("failed to update food. Error: %v", err))
+			res.ResponseStatus = StatusErr + fmt.Sprintf("failed to update food. Error: %v", err)
+			render.JSON(w, r, res)
+
 			return
 		}
 		res.ResponseStatus = StatusOK

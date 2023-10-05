@@ -23,8 +23,6 @@ func New(ctx context.Context, logger *logging.Logger,
 	pRep person.Repository, fRep food.Repository) *chi.Mux {
 	router := chi.NewRouter()
 
-	//TODO мидлвари не работают why?
-
 	router.Use(middleware.RequestID)
 	//router.Use(middleware.Logger)
 	router.Use(mwlogger.New(logger))
