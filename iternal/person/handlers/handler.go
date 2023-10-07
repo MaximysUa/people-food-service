@@ -12,6 +12,11 @@ import (
 	logging "people-food-service/pkg/client/logger"
 )
 
+const (
+	StatusOK  = "OK"
+	StatusErr = "ERROR: "
+)
+
 func GetOne(ctx context.Context, logger *logging.Logger, repos person.Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
@@ -20,18 +25,20 @@ func GetOne(ctx context.Context, logger *logging.Logger, repos person.Repository
 		if err != nil {
 			logger.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
-			render.JSON(w, r, err)
+			res.ResponseStatus = StatusErr + err.Error()
+			render.JSON(w, r, res)
 			return
 		}
 		one, err := repos.FindOne(ctx, req.Name, req.FamilyName)
 		if err != nil {
 			logger.Errorf("failed to find a person. Error: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
-			render.JSON(w, r, fmt.Sprintf("failed to find all. Error: %v", err))
+			res.ResponseStatus = StatusErr + err.Error()
+			render.JSON(w, r, res)
 			return
 		}
 		res.Person = append(res.Person, one)
-		res.ResponseStatus = "Ok"
+		res.ResponseStatus = StatusOK
 		render.JSON(w, r, res)
 	}
 }
