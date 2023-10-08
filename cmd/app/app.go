@@ -33,7 +33,7 @@ func main() {
 		logger.Fatal(err)
 	}
 
-	rout := router.New(ctx, logger, pRep, fRep)
+	rout := router.New(ctx, logger, pRep, fRep, cfg)
 
 	listener, listenErr := net.Listen("tcp", cfg.Listen.Port)
 	logger.Infof("server is listening port %s", cfg.Listen.Port)

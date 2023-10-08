@@ -14,8 +14,9 @@ type Config struct {
 
 		Port string `yaml:"port"`
 	} `yaml:"listen"`
-
-	Storage StorageConfig `yaml:"storage"`
+	User     string        `yaml:"user" env-required:"true"`
+	Password string        `yaml:"password" env-required:"true" env:"HTTP_SERVER_PASSWORD"`
+	Storage  StorageConfig `yaml:"storage"`
 }
 type StorageConfig struct {
 	Host     string `json:"host"`

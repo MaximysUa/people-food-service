@@ -50,11 +50,12 @@ func GetList(ctx context.Context, logger *logging.Logger, repos person.Repositor
 		if err != nil {
 			logger.Errorf("failed to find all. Error: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
-			render.JSON(w, r, fmt.Sprintf("failed to find all. Error: %v", err))
+			res.ResponseStatus = StatusErr + err.Error()
+			render.JSON(w, r, res)
 			return
 		}
 		res.Person = all
-		res.ResponseStatus = "ok"
+		res.ResponseStatus = StatusOK
 		render.JSON(w, r, res)
 	}
 }
@@ -66,7 +67,8 @@ func Create(ctx context.Context, logger *logging.Logger, repos person.Repository
 		if err != nil {
 			logger.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
-			render.JSON(w, r, err)
+			res.ResponseStatus = StatusErr + err.Error()
+			render.JSON(w, r, res)
 			return
 		}
 		if req.UUID != "" {
@@ -74,7 +76,8 @@ func Create(ctx context.Context, logger *logging.Logger, repos person.Repository
 			if err != nil {
 				logger.Error(err)
 				w.WriteHeader(http.StatusBadRequest)
-				render.JSON(w, r, err)
+				res.ResponseStatus = StatusErr + err.Error()
+				render.JSON(w, r, res)
 				return
 			}
 		}
@@ -83,12 +86,16 @@ func Create(ctx context.Context, logger *logging.Logger, repos person.Repository
 		if err != nil && uuid == "" {
 			logger.Errorf("failed to create person. Error: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
-			render.JSON(w, r, fmt.Sprintf("failed to create person. Error: %v", err))
+
+			res.ResponseStatus = StatusErr + err.Error()
+			render.JSON(w, r, res)
 			return
 		} else if err != nil && uuid != "" {
 			logger.Debugf("failed to create person. Error: %v", err)
 			w.WriteHeader(http.StatusBadRequest)
-			render.JSON(w, r, fmt.Sprintf("person already exists. uuid: %s", uuid))
+
+			res.ResponseStatus = StatusErr + fmt.Sprintf("person already exists. uuid: %s", uuid)
+			render.JSON(w, r, res)
 			return
 		}
 		w.WriteHeader(http.StatusCreated)
@@ -98,7 +105,7 @@ func Create(ctx context.Context, logger *logging.Logger, repos person.Repository
 			FamilyName: req.FamilyName,
 			Food:       req.Food,
 		})
-		res.ResponseStatus = "Ok"
+		res.ResponseStatus = StatusOK
 		render.JSON(w, r, res)
 	}
 }
@@ -109,7 +116,8 @@ func Delete(ctx context.Context, logger *logging.Logger, repos person.Repository
 		if err != nil {
 			logger.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
-			render.JSON(w, r, err)
+			res.ResponseStatus = StatusErr + err.Error()
+			render.JSON(w, r, res)
 			return
 		}
 
@@ -117,11 +125,12 @@ func Delete(ctx context.Context, logger *logging.Logger, repos person.Repository
 		if err != nil {
 			logger.Errorf("failed to delete a person. Error: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
-			render.JSON(w, r, fmt.Sprintf("failed to delete a person. Error: %v", err))
+			res.ResponseStatus = StatusErr + err.Error()
+			render.JSON(w, r, res)
 			return
 		}
 
-		res.ResponseStatus = "Ok"
+		res.ResponseStatus = StatusOK
 		render.JSON(w, r, res)
 	}
 }
@@ -133,13 +142,16 @@ func Update(ctx context.Context, logger *logging.Logger, repos person.Repository
 		if err != nil {
 			logger.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
-			render.JSON(w, r, err)
+			res.ResponseStatus = StatusErr + err.Error()
+			render.JSON(w, r, res)
 			return
 		}
 		if req.UUID == "" {
 			logger.Errorln("Field ID is required")
 			w.WriteHeader(http.StatusBadRequest)
-			render.JSON(w, r, "Field ID is required")
+
+			res.ResponseStatus = StatusErr + "field ID is required"
+			render.JSON(w, r, res)
 			return
 		}
 
@@ -147,11 +159,12 @@ func Update(ctx context.Context, logger *logging.Logger, repos person.Repository
 		if err != nil {
 			logger.Errorf("failed to update person. Error: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
-			render.JSON(w, r, fmt.Sprintf("failed to update person. Error: %v", err))
+			res.ResponseStatus = StatusErr + err.Error()
+			render.JSON(w, r, res)
 			return
 		}
 		res.Person = append(res.Person, person.Person(req))
-		res.ResponseStatus = "Ok"
+		res.ResponseStatus = StatusOK
 		render.JSON(w, r, res)
 	}
 }

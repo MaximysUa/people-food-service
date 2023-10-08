@@ -149,3 +149,116 @@ func TestHandler_GetOne(t *testing.T) {
 		})
 	}
 }
+func TestHandler_Create(t *testing.T) {
+	type mockBehavior func(s *mock_person.MockRepository, p persondto.RequestDTO)
+
+	testTable := []struct {
+		name                 string
+		inputPerson          persondto.RequestDTO
+		mockBehavior         mockBehavior
+		expectedStatusCode   int
+		expectedResponseBody persondto.ResponseDTO
+	}{
+		{ //todo эта хуйня не работает
+			name: "OK without uuid",
+			inputPerson: persondto.RequestDTO{
+				UUID:       "",
+				Name:       "Диман",
+				FamilyName: "Рекрент",
+				Food:       []food.Food{},
+			},
+			mockBehavior: func(s *mock_person.MockRepository, p persondto.RequestDTO) {
+				s.EXPECT().Create(context.TODO(), person.Person(p)).Return("48775c0e-820b-4f95-a984-85aa68a88475", nil)
+			},
+			expectedStatusCode: 201,
+			expectedResponseBody: persondto.ResponseDTO{
+				Person: []person.Person{
+					{
+						UUID:       "48775c0e-820b-4f95-a984-85aa68a88475",
+						Name:       "Диман",
+						FamilyName: "Рекрент",
+						Food:       []food.Food{},
+					},
+				},
+				ResponseStatus: "OK",
+			},
+		},
+		{
+			name: "Empty name",
+			inputPerson: persondto.RequestDTO{
+				UUID:       "",
+				Name:       "",
+				FamilyName: "Рекрент",
+				Food:       []food.Food{},
+			},
+			mockBehavior: func(s *mock_person.MockRepository, p persondto.RequestDTO) {
+
+			},
+			expectedStatusCode: 400,
+			expectedResponseBody: persondto.ResponseDTO{
+				Person:         []person.Person(nil),
+				ResponseStatus: "ERROR: field 'Name' and 'Family name' should be not empty and consists only alphabet characters",
+			},
+		},
+		{
+			name: "Empty family name",
+			inputPerson: persondto.RequestDTO{
+				UUID:       "",
+				Name:       "Диман",
+				FamilyName: "",
+				Food:       []food.Food{},
+			},
+			mockBehavior: func(s *mock_person.MockRepository, p persondto.RequestDTO) {
+
+			},
+			expectedStatusCode: 400,
+			expectedResponseBody: persondto.ResponseDTO{
+				Person:         []person.Person(nil),
+				ResponseStatus: "ERROR: field 'Name' and 'Family name' should be not empty and consists only alphabet characters",
+			},
+		},
+		{
+			name:        "Empty json",
+			inputPerson: persondto.RequestDTO{},
+			mockBehavior: func(s *mock_person.MockRepository, p persondto.RequestDTO) {
+
+			},
+			expectedStatusCode: 400,
+			expectedResponseBody: persondto.ResponseDTO{
+				Person:         []person.Person(nil),
+				ResponseStatus: "ERROR: field 'Name' and 'Family name' should be not empty and consists only alphabet characters",
+			},
+		},
+	}
+	for _, testCase := range testTable {
+		t.Run(testCase.name, func(t *testing.T) {
+			c := gomock.NewController(t)
+			defer c.Finish()
+
+			repo := mock_person.NewMockRepository(c)
+			testCase.mockBehavior(repo, testCase.inputPerson)
+			l := logrus.New()
+			level, _ := logrus.ParseLevel("trace")
+			l.SetLevel(level)
+			le := logrus.NewEntry(l)
+			logger := logging.Logger{le}
+			router := chi.NewRouter()
+
+			router.Post("/api/person", Create(context.TODO(), &logger, repo))
+
+			w := httptest.NewRecorder()
+			marshal, err := json.Marshal(testCase.inputPerson)
+			if err != nil {
+				return
+			}
+			req := httptest.NewRequest("POST", "/api/person", bytes.NewReader(marshal))
+
+			router.ServeHTTP(w, req)
+			var resp persondto.ResponseDTO
+			err = json.Unmarshal([]byte(w.Body.String()), &resp)
+
+			require.Equal(t, testCase.expectedStatusCode, w.Code)
+			require.Equal(t, testCase.expectedResponseBody, resp)
+		})
+	}
+}

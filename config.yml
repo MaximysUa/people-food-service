@@ -4,6 +4,8 @@ is_debug: true
 listen:
   type: port
   port: :8080
+user: myapp
+password: myapp
 
 storage:
   host: localhost
