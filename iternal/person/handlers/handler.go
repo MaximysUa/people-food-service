@@ -147,7 +147,7 @@ func Update(ctx context.Context, logger *logging.Logger, repos person.Repository
 			return
 		}
 		if req.UUID == "" {
-			logger.Errorln("Field ID is required")
+			logger.Errorln("field ID is required")
 			w.WriteHeader(http.StatusBadRequest)
 
 			res.ResponseStatus = StatusErr + "field ID is required"
