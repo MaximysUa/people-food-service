@@ -1,5 +1,6 @@
-DROP table public."person";
+DROP table public."person_food";
 DROP table public."food";
+DROP table public."person";
 
 CREATE table public.person(
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -18,14 +19,14 @@ CREATE TABLE public.person_food(
     person_id UUID NOT NULL,
     food_id UUID NOT NULL,
 
-    CONSTRAINT person_fk FOREIGN KEY (person_id) REFERENCES public.person(id),
+    CONSTRAINT person_fk FOREIGN KEY (person_id) REFERENCES public.person(id) ON DELETE CASCADE ,
     CONSTRAINT food_id FOREIGN KEY (food_id) REFERENCES public.food(id),
     CONSTRAINT person_food_unique UNIQUE(person_id, food_id)
 
 );
 
 
-DELETE FROM person p WHERE p.name = 'Игорь' AND p.family_name = 'Адамов';
+DELETE FROM person p WHERE p.name = 'Василий' AND p.family_name = 'Соловьёв';
 
 INSERT INTO food(name, price) VALUES('Пицца', 7.85);
 INSERT INTO food(name, price) VALUES('Бурито', 9.55);
@@ -37,14 +38,14 @@ INSERT INTO public.person(name, family_name) VALUES('Игорь', 'Адамов'
 --0275a687-a26c-49da-a9ae-8070b3a08abe
 --0275a687-a26c-49da-a9ae-8070b3a08abe
 --0275a687-a26c-49da-a9ae-8070b3a08abe
-INSERT INTO public.person_food(person_id, food_id) VALUES('0275a687-a26c-49da-a9ae-8070b3a08abe',
-                                                          'd41b9758-f344-447f-b512-cc35b89c23e9');
-INSERT INTO public.person_food(person_id, food_id) VALUES('0275a687-a26c-49da-a9ae-8070b3a08abe',
-                                                          '41b72d27-c250-4a3a-8c0b-8a7de570a564');
-INSERT INTO public.person_food(person_id, food_id) VALUES('0275a687-a26c-49da-a9ae-8070b3a08abe',
-                                                          '63aa08fd-15b1-4cb6-af21-e1e40cbadc6c');
-INSERT INTO public.person_food(person_id, food_id) VALUES('d8830326-5f1c-49db-942c-63941b7615b8',
-                                                          '63aa08fd-15b1-4cb6-af21-e1e40cbadc6c');
+INSERT INTO public.person_food(person_id, food_id) VALUES('bf69e26f-88c4-4695-b30c-cb27989acbf1',
+                                                          '0a5d676b-e8a0-4ee1-8994-5d8b3d954c21');
+INSERT INTO public.person_food(person_id, food_id) VALUES('bf69e26f-88c4-4695-b30c-cb27989acbf1',
+                                                          '4b982cf3-9b2d-437b-8be2-cb0c28b2bd7a');
+INSERT INTO public.person_food(person_id, food_id) VALUES('bf69e26f-88c4-4695-b30c-cb27989acbf1',
+                                                          '4c1e120b-1c18-49fd-add6-d2772aa9f541');
+INSERT INTO public.person_food(person_id, food_id) VALUES('215386a0-6332-4f00-83ae-2236ab656862',
+                                                          '4c1e120b-1c18-49fd-add6-d2772aa9f541');
 
 SELECT f.id, f.name, f.price
 FROM public.person_food pf

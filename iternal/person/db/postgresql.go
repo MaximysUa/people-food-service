@@ -250,6 +250,7 @@ func (r *repository) Update(ctx context.Context, person person.Person) error {
 	return nil
 }
 
+// TODO i corrected it but didnt test
 func (r *repository) Delete(ctx context.Context, p person.Person) error {
 	tx, err := r.client.Begin(ctx)
 	if err != nil {
@@ -260,10 +261,7 @@ func (r *repository) Delete(ctx context.Context, p person.Person) error {
 		DELETE FROM person p 
 		WHERE p.id = $1 
 		`
-	sq := `
-		DELETE FROM person_food pf
-		WHERE pf.person_id = $1 
-		`
+
 	exec, err := r.client.Exec(ctx, q, p.UUID)
 	if err != nil {
 		err := tx.Rollback(ctx)
@@ -273,15 +271,7 @@ func (r *repository) Delete(ctx context.Context, p person.Person) error {
 		r.logger.Errorf("Failed with exec the query: %s with id: %s\n", formatQuery(q), p.UUID)
 		return err
 	}
-	execSq, err := r.client.Exec(ctx, sq, p.UUID)
-	if err != nil {
-		r.logger.Errorf("Failed with exec the query: %s with id: %s\n", formatQuery(sq), p.UUID)
-		err := tx.Rollback(ctx)
-		if err != nil {
-			return err
-		}
-		return err
-	}
+
 	if exec.RowsAffected() == 0 {
 		err = fmt.Errorf("cant find person in table person with id: %s\n", p.UUID)
 		r.logger.Errorf(err.Error())
@@ -291,14 +281,7 @@ func (r *repository) Delete(ctx context.Context, p person.Person) error {
 		}
 		return err
 	}
-	if execSq.RowsAffected() == 0 {
-		r.logger.Debugf("cant find person in table person_food with id: %s\n", p.UUID)
-		err := tx.Rollback(ctx)
-		if err != nil {
-			return err
-		}
 
-	}
 	err = tx.Commit(ctx)
 	if err != nil {
 		r.logger.Errorf("faild to commit transaction. err: %v", err)

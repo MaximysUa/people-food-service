@@ -3,6 +3,7 @@
 ### Successful test: check response status is 200 and content-type is JSON
 GET http://localhost:8080//api/person
 Content-Type: application/json
+Authorization: Basic myapp myapp
 
 {
   "name": "Игорь",
@@ -43,6 +44,7 @@ GET http://localhost:8080//api/person
 
 ### Successful test: check response status is 200 and content-type is JSON
 GET http://localhost:8080//api/people
+Authorization: Basic myapp myapp
 
 > {%
     client.test("Request executed successfully", function() {
