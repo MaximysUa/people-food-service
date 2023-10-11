@@ -28,10 +28,10 @@ func (r *repository) Create(ctx context.Context, f food.Food) (string, error) {
 			WHERE NOT EXISTS(select name from food where name = $1::varchar)
 			RETURNING id
 			`
-		newFood := r.client.QueryRow(ctx, q, f.Name, f.Price)
+		newFood := tx.QueryRow(ctx, q, f.Name, f.Price)
 		err := newFood.Scan(&f.UUID)
 		if err != nil {
-			err := r.client.QueryRow(ctx, "SELECT id FROM public.food WHERE name = $1 AND price = $2",
+			err := tx.QueryRow(ctx, "SELECT id FROM public.food WHERE name = $1 AND price = $2",
 				f.Name, f.Price).Scan(&f.UUID)
 			if err != nil {
 				r.logger.Errorf("faild to create new food. err: %v\n", err)
@@ -54,7 +54,7 @@ func (r *repository) Create(ctx context.Context, f food.Food) (string, error) {
 			WHERE NOT EXISTS(select name from food where name = $1::varchar)
 			RETURNING id
 			`
-		_, err := r.client.Exec(ctx, q, f.UUID, f.Name, f.Price)
+		_, err := tx.Exec(ctx, q, f.UUID, f.Name, f.Price)
 		if err != nil {
 			r.logger.Errorf("faild to create new food. err: %v\n", err)
 			err := tx.Rollback(ctx)
@@ -84,6 +84,7 @@ func (r *repository) FindAll(ctx context.Context) ([]food.Food, error) {
 		r.logger.Errorf("Faild with finding all food. query:%s\n", formatQuery(q))
 		return nil, err
 	}
+	defer rows.Close()
 	foodList := make([]food.Food, 0)
 	for rows.Next() {
 		var f food.Food
@@ -125,7 +126,7 @@ func (r *repository) Update(ctx context.Context, f food.Food) error {
 		SET name = $2, price = $3
 		WHERE id = $1
 		`
-	exec, err := r.client.Exec(ctx, q, f.UUID, f.Name, f.Price)
+	exec, err := tx.Exec(ctx, q, f.UUID, f.Name, f.Price)
 	if err != nil {
 		r.logger.Errorf("Failed with exec the query: %s with id: %s\n", formatQuery(q), f.UUID)
 		err := tx.Rollback(ctx)
@@ -161,7 +162,7 @@ func (r *repository) Delete(ctx context.Context, f food.Food) error {
 		DELETE FROM food f 
 		WHERE f.id = $1 
 		`
-	exec, err := r.client.Exec(ctx, q, f.UUID)
+	exec, err := tx.Exec(ctx, q, f.UUID)
 	if err != nil {
 		r.logger.Errorf("Failed with exec the query: %s with id: %s\n", formatQuery(q), f.UUID)
 		err := tx.Rollback(ctx)

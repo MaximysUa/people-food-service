@@ -34,11 +34,11 @@ func (r *repository) Create(ctx context.Context, person person.Person) (string, 
 		WHERE NOT EXISTS(select name, family_name from person where name = $1::varchar and family_name = $2::varchar)
 		RETURNING id
 		`
-		newPersUUID := r.client.QueryRow(ctx, q, person.Name, person.FamilyName)
+		newPersUUID := tx.QueryRow(ctx, q, person.Name, person.FamilyName)
 		err := newPersUUID.Scan(&person.UUID)
 		if err != nil {
 
-			err = r.client.QueryRow(ctx, "SELECT id FROM public.person WHERE name = $1 AND family_name = $2",
+			err = tx.QueryRow(ctx, "SELECT id FROM public.person WHERE name = $1 AND family_name = $2",
 				person.Name, person.FamilyName).Scan(&person.UUID)
 			if err != nil {
 				r.logger.Errorf("faild to create new person. query:%v\n", err)
@@ -58,7 +58,7 @@ func (r *repository) Create(ctx context.Context, person person.Person) (string, 
 		WHERE NOT EXISTS(select name, family_name from person where name = $2 and family_name = $3)
 		RETURNING id
 		`
-		_, err := r.client.Exec(ctx, q, person.UUID, person.Name, person.FamilyName)
+		_, err := tx.Exec(ctx, q, person.UUID, person.Name, person.FamilyName)
 
 		if err != nil {
 			r.logger.Errorf("faild to create new person. query:%v\n", err)
@@ -76,7 +76,7 @@ func (r *repository) Create(ctx context.Context, person person.Person) (string, 
 		`
 
 	for _, f := range person.Food {
-		_, err := r.client.Exec(ctx, sq, person.UUID, f.UUID)
+		_, err := tx.Exec(ctx, sq, person.UUID, f.UUID)
 		if err != nil {
 			r.logger.Errorf("faild to insert person food. query:%s\n", formatQuery(sq))
 			err := tx.Rollback(ctx)
@@ -106,6 +106,7 @@ func (r *repository) FindAll(ctx context.Context) ([]person.Person, error) {
 		r.logger.Errorf("Faild with finding all people. query:%s\n", formatQuery(q))
 		return nil, err
 	}
+	defer rows.Close()
 	people := make([]person.Person, 0)
 	for rows.Next() {
 		var p person.Person
@@ -123,13 +124,13 @@ func (r *repository) FindAll(ctx context.Context) ([]person.Person, error) {
 			`
 		personFood := make([]food.Food, 0)
 		var f food.Food
-		foodRow, err := r.client.Query(ctx, sq, p.UUID)
+		foodRows, err := r.client.Query(ctx, sq, p.UUID)
 		if err != nil {
 			r.logger.Errorf("Faild with finding food row. query:%s\n", formatQuery(sq))
 			return nil, err
 		}
-		for foodRow.Next() {
-			err = foodRow.Scan(&f.UUID, &f.Name, &f.Price)
+		for foodRows.Next() {
+			err = foodRows.Scan(&f.UUID, &f.Name, &f.Price)
 			if err != nil {
 				r.logger.Errorf("Faild with scaning food row. err:%v\n", err)
 				return nil, err
@@ -137,6 +138,7 @@ func (r *repository) FindAll(ctx context.Context) ([]person.Person, error) {
 			personFood = append(personFood, f)
 
 		}
+		defer foodRows.Close()
 		p.Food = personFood
 		people = append(people, p)
 	}
@@ -169,6 +171,8 @@ func (r *repository) FindOne(ctx context.Context, name, familyName string) (pers
 
 		return person.Person{}, err
 	}
+
+	defer rows.Close()
 	for rows.Next() {
 		var f food.Food
 		err := rows.Scan(&f.UUID, &f.Name, &f.Price)
@@ -202,7 +206,7 @@ func (r *repository) Update(ctx context.Context, person person.Person) error {
 		INSERT INTO person_food(person_id, food_id) 
 		VALUES($1, $2) 
 		`
-	exec, err := r.client.Exec(ctx, q, person.UUID, person.Name, person.FamilyName)
+	exec, err := tx.Exec(ctx, q, person.UUID, person.Name, person.FamilyName)
 	if err != nil {
 		r.logger.Errorf("Failed with exec the query: %s with id: %s\n", formatQuery(q), person.UUID)
 		err := tx.Rollback(ctx)
@@ -221,7 +225,7 @@ func (r *repository) Update(ctx context.Context, person person.Person) error {
 		return err
 	}
 
-	_, err = r.client.Exec(ctx, qDel, person.UUID)
+	_, err = tx.Exec(ctx, qDel, person.UUID)
 	if err != nil {
 		err := tx.Rollback(ctx)
 		if err != nil {
@@ -231,7 +235,7 @@ func (r *repository) Update(ctx context.Context, person person.Person) error {
 
 	}
 	for _, val := range person.Food {
-		_, err := r.client.Exec(ctx, qIns, person.UUID, val.UUID)
+		_, err := tx.Exec(ctx, qIns, person.UUID, val.UUID)
 		if err != nil {
 			err := tx.Rollback(ctx)
 			if err != nil {
@@ -262,7 +266,7 @@ func (r *repository) Delete(ctx context.Context, p person.Person) error {
 		WHERE p.id = $1 
 		`
 
-	exec, err := r.client.Exec(ctx, q, p.UUID)
+	exec, err := tx.Exec(ctx, q, p.UUID)
 	if err != nil {
 		err := tx.Rollback(ctx)
 		if err != nil {

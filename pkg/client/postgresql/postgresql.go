@@ -3,6 +3,7 @@ package postgresql
 import (
 	"context"
 	"fmt"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -35,6 +36,17 @@ func NewClient(ctx context.Context, maxAttempts int, sc config.StorageConfig) (p
 	if err != nil {
 		log.Fatal("err do with tries postgresql")
 	}
-
+	//"postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"
+	//driv := dsn + "?sslmode=disable"
+	//m, err := migrate.New("file://db/migrations/", driv)
+	//if err != nil {
+	//	log.Fatal(err)
+	//	return nil, err
+	//}
+	//err = m.Up()
+	//if err != nil {
+	//	log.Fatal(err)
+	//	return nil, err
+	//}
 	return pool, err
 }
