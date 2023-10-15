@@ -3,7 +3,6 @@ package postgresql
 import (
 	"context"
 	"fmt"
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -11,6 +10,31 @@ import (
 	"people-food-service/iternal/config"
 	repeatable "people-food-service/pkg/utils"
 	"time"
+)
+
+const (
+	query = `CREATE TABLE IF NOT EXISTS public.person(
+                              id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                              name VARCHAR(100) NOT NULL ,
+                              family_name VARCHAR(100) NOT NULL
+);
+
+			CREATE TABLE IF NOT EXISTS public.food(
+                            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                            name VARCHAR(100) NOT NULL,
+                            price FLOAT NOT NULL
+);
+
+			CREATE TABLE IF NOT EXISTS public.person_food(
+                                   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                                   person_id UUID NOT NULL,
+                                   food_id UUID NOT NULL,
+
+                                   CONSTRAINT person_fk FOREIGN KEY (person_id) REFERENCES public.person(id) ON DELETE CASCADE ,
+                                   CONSTRAINT food_id FOREIGN KEY (food_id) REFERENCES public.food(id),
+                                   CONSTRAINT person_food_unique UNIQUE(person_id, food_id)
+
+);`
 )
 
 type Client interface {
@@ -36,17 +60,11 @@ func NewClient(ctx context.Context, maxAttempts int, sc config.StorageConfig) (p
 	if err != nil {
 		log.Fatal("err do with tries postgresql")
 	}
-	//"postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"
-	//driv := dsn + "?sslmode=disable"
-	//m, err := migrate.New("file://db/migrations/", driv)
-	//if err != nil {
-	//	log.Fatal(err)
-	//	return nil, err
-	//}
-	//err = m.Up()
-	//if err != nil {
-	//	log.Fatal(err)
-	//	return nil, err
-	//}
+	// creating db if not exists
+	_, err = pool.Exec(ctx, query)
+	if err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
 	return pool, err
 }
