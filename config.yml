@@ -8,8 +8,8 @@ user: myapp
 password: myapp
 
 storage:
-  host: localhost
+  host: db
   port: 5432
   database: postgres
   username: postgres
-  password: 142569
+  password: postgres
