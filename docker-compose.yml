@@ -4,17 +4,23 @@ services:
   app:
     build: ./
     command: /bin/app
+    container_name: pf-app
     ports:
       - "8080:8080"
     depends_on:
       - db
+    environment:
+      - DB_PASSWORD=postgres
 
 
 
   db:
     restart: always
-    image: postgres
+    image: postgres:14-alpine
+    container_name: app-psql
     environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-    ports:
-      - "5432:5432"
+    volumes:
+      - ./data:/var/lib/postgresql/data

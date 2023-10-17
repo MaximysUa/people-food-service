@@ -13,19 +13,19 @@ import (
 )
 
 const (
-	query = `CREATE TABLE IF NOT EXISTS public.person(
+	query = `CREATE TABLE IF NOT EXISTS person(
                               id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                               name VARCHAR(100) NOT NULL ,
                               family_name VARCHAR(100) NOT NULL
 );
 
-			CREATE TABLE IF NOT EXISTS public.food(
+			CREATE TABLE IF NOT EXISTS food(
                             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                             name VARCHAR(100) NOT NULL,
                             price FLOAT NOT NULL
 );
 
-			CREATE TABLE IF NOT EXISTS public.person_food(
+			CREATE TABLE IF NOT EXISTS person_food(
                                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                                    person_id UUID NOT NULL,
                                    food_id UUID NOT NULL,
@@ -60,7 +60,8 @@ func NewClient(ctx context.Context, maxAttempts int, sc config.StorageConfig) (p
 	if err != nil {
 		log.Fatal("err do with tries postgresql")
 	}
-	// creating db if not exists
+	//TODO какаято ошибка в этой части, приложение не запускается в докере из-за этого
+	//creating db if not exists
 	_, err = pool.Exec(ctx, query)
 	if err != nil {
 		log.Fatal(err)
