@@ -58,7 +58,7 @@ Authorization: Basic myapp myapp
 %}
 
 ###Create with right body
-POST http://localhost:8080//api/person
+POST http://0.0.0.0:8080//api/person
 Content-Type: application/json
 Authorization: Basic myapp myapp
 
@@ -119,4 +119,4 @@ Content-Type: application/json
         client.assert(type === "application/json", "Expected 'application/json' but received '" + type + "'");
     });
 %}
-
+###

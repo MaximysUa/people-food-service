@@ -23,7 +23,7 @@ func TestRepository_Create(t *testing.T) {
 								WHERE NOT EXISTS(select name from food where name = $1::varchar)
 								RETURNING id`).
 		WithArgs("Пицца", 7.45).
-		WillReturnRows(pgxmock.NewRows([]))
+		WillReturnRows(pgxmock.NewRows([]string{"result"}))
 	mock.ExpectCommit()
 	l := logrus.New()
 	level, _ := logrus.ParseLevel("trace")

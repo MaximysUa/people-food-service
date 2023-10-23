@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"net"
 	"net/http"
 	"os"
@@ -24,6 +26,21 @@ func main() {
 	logger := logging.GetLogger()
 
 	client, err := postgresql.NewClient(ctx, 5, cfg.Storage)
+
+	//dsn := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=disable",
+	//	cfg.Storage.Username,
+	//	cfg.Storage.Password,
+	//	cfg.Storage.Host,
+	//	cfg.Storage.Port,
+	//	cfg.Storage.Database)
+	//m, err := migrate.New(
+	//	"file://", dsn)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//if err := m.Up(); err != nil {
+	//	log.Fatal(err)
+	//}
 
 	pRep := person.NewRepository(client, logger)
 	fRep := food.NewRepository(client, logger)

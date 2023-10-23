@@ -1,3 +1,4 @@
+BEGIN;
 CREATE TABLE IF NOT EXISTS public.person(
                               id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                               name VARCHAR(100) NOT NULL ,
@@ -20,3 +21,4 @@ CREATE TABLE IF NOT EXISTS public.person_food(
                                    CONSTRAINT person_food_unique UNIQUE(person_id, food_id)
 
 );
+COMMIT;

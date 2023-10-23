@@ -62,10 +62,18 @@ func NewClient(ctx context.Context, maxAttempts int, sc config.StorageConfig) (p
 	}
 	//TODO какаято ошибка в этой части, приложение не запускается в докере из-за этого
 	//creating db if not exists
-	_, err = pool.Exec(ctx, query)
-	if err != nil {
-		log.Fatal(err)
-		return nil, err
-	}
+	//tx, err := pool.Begin(ctx)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//_, err = tx.Exec(ctx, query)
+	//if err != nil {
+	//	err := tx.Rollback(ctx)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	log.Fatal(err)
+	//	return nil, err
+	//}
 	return pool, err
 }
