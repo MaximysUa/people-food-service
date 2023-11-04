@@ -4,6 +4,9 @@ import (
 	"context"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	httpSwagger "github.com/swaggo/http-swagger"
+	//_ "github.com/swaggo/http-swagger/example/go-chi/docs"
+	_ "people-food-service/cmd/app/docs"
 	"people-food-service/iternal/config"
 	"people-food-service/iternal/food"
 	fh "people-food-service/iternal/food/handlers"
@@ -29,6 +32,10 @@ func New(ctx context.Context, logger *logging.Logger,
 	router.Use(mwlogger.New(logger))
 	router.Use(middleware.Recoverer)
 
+	router.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("http://localhost:8080/swagger/doc.json"), //The url pointing to API definition
+	))
+
 	router.Route("/api", func(r chi.Router) {
 		r.Use(middleware.BasicAuth("people-food-service", map[string]string{
 			cfg.User: cfg.Password,
@@ -45,6 +52,6 @@ func New(ctx context.Context, logger *logging.Logger,
 		r.Delete(foodURL, fh.Delete(ctx, logger, fRep))
 		r.Patch(foodURL, fh.Update(ctx, logger, fRep))
 	})
-
+	logger.Info(router.Routes())
 	return router
 }

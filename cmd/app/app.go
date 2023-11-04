@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	_ "people-food-service/cmd/app/docs"
 	"people-food-service/iternal/config"
 	food "people-food-service/iternal/food/db"
 	person "people-food-service/iternal/person/db"
@@ -17,6 +18,15 @@ import (
 	"syscall"
 	"time"
 )
+
+// @title           People-food service
+// @version         1.0
+// @description     This is small pet project for learning.
+
+// @host      localhost:8080
+// @BasePath  /api/
+
+// @securityDefinitions.basic  BasicAuth
 
 func main() {
 	cfg := config.GetConfig()
