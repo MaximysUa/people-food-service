@@ -25,8 +25,8 @@ const (
 // @Produce      json
 // @Param        input body fooddto.RequestDTO true "food and price"
 // @Success      200  {object}  fooddto.ResponseDTO
-// @Failure      400  {object}  custom error
-// @Failure      500  {object}  custom error
+// @Failure      400  {object}  error
+// @Failure      500  {object}  error
 // @Router       /api/food [get]
 func GetOne(ctx context.Context, logger *logging.Logger, repos food.Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -58,18 +58,16 @@ func GetOne(ctx context.Context, logger *logging.Logger, repos food.Repository) 
 	}
 }
 
-// @Summary      GetOne
-// @Description  get one food entity
+// @Summary      GetList
+// @Description  get list of food entity
 // @Tags         Food
 // @Security BasicAuth
 // @Accept       json
 // @Produce      json
-// @Param        input body fooddto.RequestDTO true "food and price"
 // @Success      200  {object}  fooddto.ResponseDTO
-// @Failure      400  {object}  custom error
-// @Failure      500  {object}  custom error
-// @Router       /api/food [get]
-
+// @Failure      400  {object}   error
+// @Failure      500  {object}  error
+// @Router       /api/food/all [get]
 func GetList(ctx context.Context, logger *logging.Logger, repos food.Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var res fooddto.ResponseDTO
@@ -89,18 +87,17 @@ func GetList(ctx context.Context, logger *logging.Logger, repos food.Repository)
 	}
 }
 
-// @Summary      GetOne
-// @Description  get one food entity
+// @Summary      Create
+// @Description  create a food entity
 // @Tags         Food
 // @Security BasicAuth
 // @Accept       json
 // @Produce      json
 // @Param        input body fooddto.RequestDTO true "food and price"
-// @Success      200  {object}  fooddto.ResponseDTO
-// @Failure      400  {object}  custom error
-// @Failure      500  {object}  custom error
-// @Router       /api/food [get]
-
+// @Success      201  {object}  fooddto.ResponseDTO
+// @Failure      400  {object}  error
+// @Failure      500  {object}  error
+// @Router       /api/food [post]
 func Create(ctx context.Context, logger *logging.Logger, repos food.Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var res fooddto.ResponseDTO
@@ -149,18 +146,17 @@ func Create(ctx context.Context, logger *logging.Logger, repos food.Repository) 
 	}
 }
 
-// @Summary      GetOne
-// @Description  get one food entity
+// @Summary      Delete
+// @Description  delete a food entity
 // @Tags         Food
 // @Security BasicAuth
 // @Accept       json
 // @Produce      json
 // @Param        input body fooddto.RequestDTO true "food and price"
 // @Success      200  {object}  fooddto.ResponseDTO
-// @Failure      400  {object}  custom error
-// @Failure      500  {object}  custom error
-// @Router       /api/food [get]
-
+// @Failure      400  {object}   error
+// @Failure      500  {object}   error
+// @Router       /api/food [delete]
 func Delete(ctx context.Context, logger *logging.Logger, repos food.Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var res fooddto.ResponseDTO
@@ -188,18 +184,17 @@ func Delete(ctx context.Context, logger *logging.Logger, repos food.Repository) 
 	}
 }
 
-// @Summary      GetOne
-// @Description  get one food entity
+// @Summary      Update
+// @Description  Update a food entity
 // @Tags         Food
 // @Security BasicAuth
 // @Accept       json
 // @Produce      json
 // @Param        input body fooddto.RequestDTO true "food and price"
 // @Success      200  {object}  fooddto.ResponseDTO
-// @Failure      400  {object}  custom error
-// @Failure      500  {object}  custom error
-// @Router       /api/food [get]
-
+// @Failure      400  {object}   error
+// @Failure      500  {object}   error
+// @Router       /api/food [patch]
 func Update(ctx context.Context, logger *logging.Logger, repos food.Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var res fooddto.ResponseDTO

@@ -17,6 +17,17 @@ const (
 	StatusErr = "ERROR: "
 )
 
+// @Summary      GetOne
+// @Description  get one people entity
+// @Tags         People
+// @Security BasicAuth
+// @Accept       json
+// @Produce      json
+// @Param        input body persondto.RequestDTO true "name and family name"
+// @Success      200  {object}  persondto.ResponseDTO
+// @Failure      400  {object}  error
+// @Failure      500  {object}  error
+// @Router       /api/person [get]
 func GetOne(ctx context.Context, logger *logging.Logger, repos person.Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
@@ -42,6 +53,17 @@ func GetOne(ctx context.Context, logger *logging.Logger, repos person.Repository
 		render.JSON(w, r, res)
 	}
 }
+
+// @Summary      GetList
+// @Description  get list of people entity
+// @Tags         People
+// @Security BasicAuth
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  persondto.ResponseDTO
+// @Failure      400  {object}  error
+// @Failure      500  {object}  error
+// @Router       /api/people [get]
 func GetList(ctx context.Context, logger *logging.Logger, repos person.Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var res persondto.ResponseDTO
@@ -60,6 +82,17 @@ func GetList(ctx context.Context, logger *logging.Logger, repos person.Repositor
 	}
 }
 
+// @Summary      Create
+// @Description  create a people entity
+// @Tags         People
+// @Security BasicAuth
+// @Accept       json
+// @Produce      json
+// @Param        input body persondto.RequestDTO true "name and family name"
+// @Success      201  {object}  persondto.ResponseDTO
+// @Failure      400  {object}  error
+// @Failure      500  {object}  error
+// @Router       /api/person [post]
 func Create(ctx context.Context, logger *logging.Logger, repos person.Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var res persondto.ResponseDTO
@@ -109,6 +142,18 @@ func Create(ctx context.Context, logger *logging.Logger, repos person.Repository
 		render.JSON(w, r, res)
 	}
 }
+
+// @Summary      Delete
+// @Description  Delete a people entity
+// @Tags         People
+// @Security BasicAuth
+// @Accept       json
+// @Produce      json
+// @Param        input body persondto.RequestDTO true "name and family name"
+// @Success      200  {object}  persondto.ResponseDTO
+// @Failure      400  {object}  error
+// @Failure      500  {object}  error
+// @Router       /api/person [delete]
 func Delete(ctx context.Context, logger *logging.Logger, repos person.Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var res persondto.ResponseDTO
@@ -135,6 +180,17 @@ func Delete(ctx context.Context, logger *logging.Logger, repos person.Repository
 	}
 }
 
+// @Summary      Update
+// @Description  Update a people entity
+// @Tags         People
+// @Security BasicAuth
+// @Accept       json
+// @Produce      json
+// @Param        input body persondto.RequestDTO true "name and family name"
+// @Success      200  {object}  persondto.ResponseDTO
+// @Failure      400  {object}  error
+// @Failure      500  {object}  error
+// @Router       /api/person [patch]
 func Update(ctx context.Context, logger *logging.Logger, repos person.Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var res persondto.ResponseDTO

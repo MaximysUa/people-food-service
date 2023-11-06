@@ -6,7 +6,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	httpSwagger "github.com/swaggo/http-swagger"
 	//_ "github.com/swaggo/http-swagger/example/go-chi/docs"
-	_ "people-food-service/cmd/app/docs"
+	_ "people-food-service/docs"
 	"people-food-service/iternal/config"
 	"people-food-service/iternal/food"
 	fh "people-food-service/iternal/food/handlers"

@@ -1,0 +1,355 @@
+basePath: /api/
+definitions:
+  food.Food:
+    properties:
+      name:
+        type: string
+      price:
+        type: number
+      uuid:
+        type: string
+    type: object
+  fooddto.RequestDTO:
+    properties:
+      name:
+        type: string
+      price:
+        type: number
+      uuid:
+        type: string
+    type: object
+  fooddto.ResponseDTO:
+    properties:
+      food:
+        items:
+          $ref: '#/definitions/food.Food'
+        type: array
+      responseStatus:
+        type: string
+    type: object
+  person.Person:
+    properties:
+      family_name:
+        type: string
+      food:
+        items:
+          $ref: '#/definitions/food.Food'
+        type: array
+      name:
+        type: string
+      uuid:
+        type: string
+    type: object
+  persondto.RequestDTO:
+    properties:
+      family_name:
+        type: string
+      food:
+        items:
+          $ref: '#/definitions/food.Food'
+        type: array
+      name:
+        type: string
+      uuid:
+        type: string
+    type: object
+  persondto.ResponseDTO:
+    properties:
+      person:
+        items:
+          $ref: '#/definitions/person.Person'
+        type: array
+      responseStatus:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: This is small pet project for learning.
+  title: People-food service
+  version: "1.0"
+paths:
+  /api/food:
+    delete:
+      consumes:
+      - application/json
+      description: delete a food entity
+      parameters:
+      - description: food and price
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/fooddto.RequestDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fooddto.ResponseDTO'
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - BasicAuth: []
+      summary: Delete
+      tags:
+      - Food
+    get:
+      consumes:
+      - application/json
+      description: get one food entity
+      parameters:
+      - description: food and price
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/fooddto.RequestDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fooddto.ResponseDTO'
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - BasicAuth: []
+      summary: GetOne
+      tags:
+      - Food
+    patch:
+      consumes:
+      - application/json
+      description: Update a food entity
+      parameters:
+      - description: food and price
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/fooddto.RequestDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fooddto.ResponseDTO'
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - BasicAuth: []
+      summary: Update
+      tags:
+      - Food
+    post:
+      consumes:
+      - application/json
+      description: create a food entity
+      parameters:
+      - description: food and price
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/fooddto.RequestDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/fooddto.ResponseDTO'
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - BasicAuth: []
+      summary: Create
+      tags:
+      - Food
+  /api/food/all:
+    get:
+      consumes:
+      - application/json
+      description: get list of food entity
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fooddto.ResponseDTO'
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - BasicAuth: []
+      summary: GetList
+      tags:
+      - Food
+  /api/people:
+    get:
+      consumes:
+      - application/json
+      description: get list of people entity
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/persondto.ResponseDTO'
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - BasicAuth: []
+      summary: GetList
+      tags:
+      - People
+  /api/person:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a people entity
+      parameters:
+      - description: name and family name
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/persondto.RequestDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/persondto.ResponseDTO'
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - BasicAuth: []
+      summary: Delete
+      tags:
+      - People
+    get:
+      consumes:
+      - application/json
+      description: get one people entity
+      parameters:
+      - description: name and family name
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/persondto.RequestDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/persondto.ResponseDTO'
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - BasicAuth: []
+      summary: GetOne
+      tags:
+      - People
+    patch:
+      consumes:
+      - application/json
+      description: Update a people entity
+      parameters:
+      - description: name and family name
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/persondto.RequestDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/persondto.ResponseDTO'
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - BasicAuth: []
+      summary: Update
+      tags:
+      - People
+    post:
+      consumes:
+      - application/json
+      description: create a people entity
+      parameters:
+      - description: name and family name
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/persondto.RequestDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/persondto.ResponseDTO'
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - BasicAuth: []
+      summary: Create
+      tags:
+      - People
+securityDefinitions:
+  BasicAuth:
+    type: basic
+swagger: "2.0"

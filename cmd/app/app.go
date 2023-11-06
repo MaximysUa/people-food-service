@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	_ "people-food-service/cmd/app/docs"
+	_ "people-food-service/docs"
 	"people-food-service/iternal/config"
 	food "people-food-service/iternal/food/db"
 	person "people-food-service/iternal/person/db"
